@@ -26,3 +26,12 @@ File.unlink(DB_FILE) if File.exist?(DB_FILE)
 ActiveRecord::Base.establish_connection(DB_CONFIG)
 ActiveRecord::Schema.verbose = false
 require 'support/db/schema'
+
+TestDB =  Module.new
+DYNAMIC_DATABASE = DynamicActiveModel::Database.new(TestDB, DB_CONFIG)
+DYNAMIC_DATABASE.create_models!
+
+require 'factories/test_factory'
+RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+end

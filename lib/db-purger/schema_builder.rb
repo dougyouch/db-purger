@@ -4,12 +4,12 @@ module DBPurger
       @schema = schema
     end
 
-    def top_table(table_name, parent_field, &block)
-      @schema.top_table = create_table(table_name, parent_field, nil, &block)
+    def top_table(table_name, parent_field, child_field = nil, &block)
+      @schema.top_table = create_table(table_name, parent_field, child_field, &block)
     end
 
-    def parent_table(table_name, parent_field, &block)
-      table = create_table(table_name, parent_field, nil, &block)
+    def parent_table(table_name, parent_field, child_field = nil, &block)
+      table = create_table(table_name, parent_field, child_field, &block)
       @schema.parent_tables << table
       table
     end
