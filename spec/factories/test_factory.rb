@@ -28,4 +28,13 @@ FactoryBot.define do
     employment
     note { 'Employee Note ' + SecureRandom.hex(8) }
   end
+
+  factory :tag, class: 'TestDB::Tag' do
+    name { 'Tag ' + SecureRandom.hex(8) }
+  end
+
+  factory :company_tag, class: 'TestDB::CompanyTag' do
+    company
+    tag
+  end
 end

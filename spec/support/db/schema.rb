@@ -31,6 +31,15 @@ ActiveRecord::Schema.define(version: 20190712000000) do
     t.string "note"
   end
 
+  create_table "tags", force: true do |t|
+    t.string "name"
+  end
+
+  create_table "company_tags", id: false do |t|
+    t.integer "company_id"
+    t.integer "tag_id"
+  end
+
   create_table "stats_employment_durations", force: true do |t|
     t.integer "employment_id"
     t.integer "duration"

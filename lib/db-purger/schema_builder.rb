@@ -14,7 +14,7 @@ module DBPurger
     def parent_table(table_name, parent_field, child_field = nil, batch_size = nil, &block)
       table = create_table(table_name, parent_field, child_field, batch_size, &block)
       if @schema.top_table
-        @schema.top_table.parent_tables << table
+        @schema.top_table.nested_schema.parent_tables << table
       else
         @schema.parent_tables << table
       end
