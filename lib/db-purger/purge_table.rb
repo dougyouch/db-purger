@@ -27,7 +27,10 @@ module DBPurger
     def purge_all!
       scope = model.where(@purge_field => @purge_value)
       scope = scope.where(@table.conditions) if @table.conditions
-      scope.delete_all
+      ActiveSupport::Notifications.instrument('delete_all.db_purger',
+                                              table_name: @table.name) do |payload|
+        payload[:num_deleted] = scope.delete_all
+      end
     end
 
     def purge_in_batches!
@@ -47,7 +50,12 @@ module DBPurger
               .order(model.primary_key).limit(@table.batch_size)
       scope = scope.where(@table.conditions) if @table.conditions
       scope = scope.where("#{model.primary_key} > #{model.connection.quote(start_id)}") if start_id
-      scope.to_a
+      ActiveSupport::Notifications.instrument('next_batch.db_purger',
+                                              table_name: @table.name) do |payload|
+        records = scope.to_a
+        payload[:num_records] = records.size
+        records
+      end
     end
     # rubocop:enable Metrics/AbcSize
 
@@ -89,17 +97,25 @@ module DBPurger
       @table.nested_schema.child_tables.any?(&:foreign_key)
     end
 
+    def delete_records_with_instrumentation(ids)
+      ActiveSupport::Notifications.instrument('delete_records.db_purger',
+                                              table_name: @table.name,
+                                              num_records: ids.size) do |payload|
+        payload[:num_deleted] = model.where(model.primary_key => ids).delete_all
+      end
+    end
+
     def delete_records(batch)
       if foreign_tables?
         delete_records_and_foreign_tables(batch)
       else
-        model.where(model.primary_key => batch_values(batch, model.primary_key)).delete_all
+        delete_records_with_instrumentation(batch_values(batch, model.primary_key))
       end
     end
 
     def delete_records_and_foreign_tables(batch)
       model.transaction do
-        model.where(model.primary_key => batch_values(batch, model.primary_key)).delete_all
+        delete_records_with_instrumentation(batch_values(batch, model.primary_key))
         purge_foreign_tables(batch)
       end
     end

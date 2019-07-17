@@ -6,4 +6,5 @@ AllCops:
   Exclude:
     - 'spec/factories/test_factory.rb'
     - 'spec/support/db/schema.rb'
+    - 'spec/support/test_db.rb'
     - 'spec/**/*_spec.rb'
