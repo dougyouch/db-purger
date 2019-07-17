@@ -31,6 +31,10 @@ module DBPurger
       table
     end
 
+    def ignore_table(table_name)
+      @schema.ignore_tables << table_name
+    end
+
     def self.build(&block)
       schema = Schema.new
       helper = new(schema)

@@ -18,22 +18,22 @@ module DBPurger
 
     # tables that are part of the database but not part of the schema
     def missing_tables
-      @database.models.map(&:table_name) - @schema.table_names.map(&:to_s)
+      database_table_names - @schema.table_names.map(&:to_s)
     end
 
     # tables that are part of the schema put not part of the database
     def unknown_tables
-      @schema.table_names.map(&:to_s) - @database.models.map(&:table_name)
+      @schema.table_names.map(&:to_s) - database_table_names
     end
 
     private
 
     def validate_no_missing_tables
-      errors.add(:missing_tables, missing_tables.join(',')) unless missing_tables.empty?
+      errors.add(:missing_tables, missing_tables.sort.join(',')) unless missing_tables.empty?
     end
 
     def validate_no_unknown_tables
-      errors.add(:unknown_tables, unknown_tables.join(',')) unless unknown_tables.empty?
+      errors.add(:unknown_tables, unknown_tables.sort.join(',')) unless unknown_tables.empty?
     end
 
     def validate_tables
@@ -59,6 +59,14 @@ module DBPurger
 
     def find_model_for_table(table)
       @database.models.detect { |model| model.table_name == table.name.to_s }
+    end
+
+    def filter_table_names(table_names)
+      table_names.reject { |table_name| @schema.ignore_table?(table_name) }
+    end
+
+    def database_table_names
+      @database_table_names ||= filter_table_names(@database.models.map(&:table_name))
     end
   end
 end

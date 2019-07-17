@@ -33,6 +33,8 @@ FileUtils.cp(DB_FILE, DB_FILE_BAK)
 
 TestDB = Module.new
 DYNAMIC_DATABASE = DynamicActiveModel::Database.new(TestDB, DB_CONFIG)
+DYNAMIC_DATABASE.skip_table('ar_internal_metadata')
+DYNAMIC_DATABASE.skip_table('schema_migrations')
 DYNAMIC_DATABASE.skip_table('tmp_load_data_table')
 DYNAMIC_DATABASE.create_models!
 DynamicActiveModel::Associations.new(DYNAMIC_DATABASE).build!
