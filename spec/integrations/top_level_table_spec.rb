@@ -9,8 +9,8 @@ describe 'top level table' do
 
       parent_table(:company_tags, :company_id)
 
-      child_table(:employments, :company_id, 2) do
-        child_table(:employment_notes, :employment_id, 1)
+      child_table(:employments, :company_id, batch_size: 2) do
+        child_table(:employment_notes, :employment_id, batch_size: 1)
       end
     end
   end

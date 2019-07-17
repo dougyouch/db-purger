@@ -15,8 +15,8 @@ describe DBPurger::SchemaValidator do
         parent_table(:company_tags, :company_id)
         parent_table(:stats_company_employments, :company_id)
 
-        child_table(:employments, :company_id, 2) do
-          child_table(:employment_notes, :employment_id, 1)
+        child_table(:employments, :company_id) do
+          child_table(:employment_notes, :employment_id)
           child_table(:stats_employment_durations, :employment_id)
         end
 
@@ -39,8 +39,8 @@ describe DBPurger::SchemaValidator do
           parent_table(:company_tags, :company_id)
           parent_table(:stats_company_employments, :company_id)
 
-          child_table(:employments, :company_id, 2) do
-            child_table(:employment_notes, :employment_id, 1)
+          child_table(:employments, :company_id) do
+            child_table(:employment_notes, :employment_id)
             child_table(:stats_employment_durations, :employment_id)
           end
 
@@ -66,8 +66,8 @@ describe DBPurger::SchemaValidator do
           parent_table(:company_tags, :company_id)
           parent_table(:stats_company_employments, :company_id)
 
-          child_table(:employments, :company_id, 2) do
-            child_table(:employment_notes, :employment_id, 1)
+          child_table(:employments, :company_id) do
+            child_table(:employment_notes, :employment_id)
             child_table(:stats_employment_durations, :employment_id)
             child_table(:employment_statuses, :employment_id)
           end
@@ -95,8 +95,8 @@ describe DBPurger::SchemaValidator do
           parent_table(:company_tags, :company_id)
           parent_table(:stats_company_employments, :company_id)
 
-          child_table(:employments, :bad_company_id, 2) do
-            child_table(:employment_notes, :employment_id, 1)
+          child_table(:employments, :bad_company_id) do
+            child_table(:employment_notes, :employment_id)
             child_table(:stats_employment_durations, :employment_id)
           end
 

@@ -28,5 +28,13 @@ module DBPurger
     def tables
       @nested_schema ? @nested_schema.tables : []
     end
+
+    def parent_fields
+      @nested_schema ? @nested_schema.tables.map(&:parent_field).compact : []
+    end
+
+    def fields
+      [@field] + parent_fields
+    end
   end
 end

@@ -46,8 +46,10 @@ module DBPurger
         return
       end
 
-      unless model.column_names.include?(table.field.to_s)
-        errors.add(:table, "#{table.name}.#{table.field} is missing in the database")
+      table.fields.each do |field|
+        unless model.column_names.include?(field.to_s)
+          errors.add(:table, "#{table.name}.#{field} is missing in the database")
+        end
       end
     end
 
