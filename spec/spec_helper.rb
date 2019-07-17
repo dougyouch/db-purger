@@ -4,6 +4,7 @@ require 'rubygems'
 require 'bundler'
 require 'securerandom'
 require 'active_record'
+require 'fileutils'
 
 begin
   Bundler.require(:default, :spec)
@@ -18,18 +19,25 @@ $LOAD_PATH.unshift(__dir__)
 require 'db-purger'
 
 DB_FILE = 'spec/test.db'
+DB_FILE_BAK = 'spec/test.db.bak'
 DB_CONFIG = {
   adapter: 'sqlite3',
   database: DB_FILE
 }.freeze
 File.unlink(DB_FILE) if File.exist?(DB_FILE)
+File.unlink(DB_FILE_BAK) if File.exist?(DB_FILE_BAK)
 ActiveRecord::Base.establish_connection(DB_CONFIG)
 ActiveRecord::Schema.verbose = false
 require 'support/db/schema'
+FileUtils.cp(DB_FILE, DB_FILE_BAK)
 
 TestDB =  Module.new
 DYNAMIC_DATABASE = DynamicActiveModel::Database.new(TestDB, DB_CONFIG)
 DYNAMIC_DATABASE.create_models!
+
+def reset_test_database
+  FileUtils.cp(DB_FILE_BAK, DB_FILE)
+end
 
 require 'factories/test_factory'
 RSpec.configure do |config|

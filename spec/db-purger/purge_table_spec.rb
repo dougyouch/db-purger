@@ -19,6 +19,7 @@ describe DBPurger::PurgeTable do
       let(:company2) { create :company }
 
       before(:each) do
+        reset_test_database
         company1
         company2
       end

@@ -51,3 +51,4 @@ pkg
 *.gem
 
 *.db
+*.bak
