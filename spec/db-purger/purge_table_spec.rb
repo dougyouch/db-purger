@@ -15,9 +15,9 @@ describe DBPurger::PurgeTable do
   context '#purge!' do
     let(:table_name) { :companies }
     let(:field) { :id }
-    let(:parent_field) { nil }
+    let(:foreign_key) { nil }
     let(:batch_size) { 2 }
-    let(:table) { DBPurger::Table.new(table_name, field, parent_field, batch_size) }
+    let(:table) { DBPurger::Table.new(table_name, field, foreign_key, batch_size) }
     let(:purge_field) { :id }
     let(:purge_value) { 1 }
     let(:purge_table) { DBPurger::PurgeTable.new(database, table, purge_field, purge_value) }

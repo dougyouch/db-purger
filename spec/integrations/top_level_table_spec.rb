@@ -13,8 +13,8 @@ describe 'top level table' do
         child_table(:employment_notes, :employment_id, batch_size: 1)
       end
 
-      child_table(:websites, :id, parent_field: :website_id)
-      child_table(:websites, :id, parent_field: :company_website_id)
+      child_table(:websites, :id, foreign_key: :website_id)
+      child_table(:websites, :id, foreign_key: :company_website_id)
     end
   end
 

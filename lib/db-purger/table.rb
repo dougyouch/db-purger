@@ -7,13 +7,13 @@ module DBPurger
 
     attr_reader :name,
                 :field,
-                :parent_field,
+                :foreign_key,
                 :batch_size
 
-    def initialize(name, field, parent_field = nil, batch_size = nil)
+    def initialize(name, field, foreign_key = nil, batch_size = nil)
       @name = name
       @field = field
-      @parent_field = parent_field
+      @foreign_key = foreign_key
       @batch_size = batch_size || DEFAULT_BATCH_SIZE
     end
 
@@ -29,12 +29,12 @@ module DBPurger
       @nested_schema ? @nested_schema.tables : []
     end
 
-    def parent_fields
-      @nested_schema ? @nested_schema.tables.map(&:parent_field).compact : []
+    def foreign_keys
+      @nested_schema ? @nested_schema.tables.map(&:foreign_key).compact : []
     end
 
     def fields
-      [@field] + parent_fields
+      [@field] + foreign_keys
     end
   end
 end

@@ -11,7 +11,7 @@ describe DBPurger::SchemaBuilder do
     it 'creates a top table with a nested schema' do
       expect(subject.name).to eq(table_name)
       expect(subject.field).to eq(:parent_id)
-      expect(subject.parent_field).to eq(nil)
+      expect(subject.foreign_key).to eq(nil)
     end
   end
 
@@ -21,7 +21,7 @@ describe DBPurger::SchemaBuilder do
     it 'creates a top table with a nested schema' do
       expect(subject.name).to eq(:my_parent_table)
       expect(subject.field).to eq(:parent_id)
-      expect(subject.parent_field).to eq(nil)
+      expect(subject.foreign_key).to eq(nil)
     end
   end
 
@@ -31,7 +31,7 @@ describe DBPurger::SchemaBuilder do
     it 'creates a top table with a nested schema' do
       expect(subject.name).to eq(:my_child_table)
       expect(subject.field).to eq(:child_id)
-      expect(subject.parent_field).to eq(nil)
+      expect(subject.foreign_key).to eq(nil)
     end
   end
 
@@ -50,15 +50,15 @@ describe DBPurger::SchemaBuilder do
     it 'builds a schema' do
       expect(subject.base_table.name).to eq(:my_base_table)
       expect(subject.base_table.field).to eq(:parent_id)
-      expect(subject.base_table.parent_field).to eq(nil)
+      expect(subject.base_table.foreign_key).to eq(nil)
       expect(subject.table_names).to eq([:my_base_table, :my_parent_table, :my_child_table])
       expect(base_table.nested_schema.parent_tables.first.name).to eq(:my_parent_table)
       expect(base_table.nested_schema.parent_tables.first.field).to eq(:parent_id)
-      expect(base_table.nested_schema.parent_tables.first.parent_field).to eq(nil)
+      expect(base_table.nested_schema.parent_tables.first.foreign_key).to eq(nil)
       expect(base_table.nested_schema.parent_tables.first.nested_schema.empty?).to eq(true)
       expect(base_table.nested_schema.child_tables.first.name).to eq(:my_child_table)
       expect(base_table.nested_schema.child_tables.first.field).to eq(:child_id)
-      expect(base_table.nested_schema.child_tables.first.parent_field).to eq(nil)
+      expect(base_table.nested_schema.child_tables.first.foreign_key).to eq(nil)
       expect(base_table.nested_schema.child_tables.first.nested_schema.empty?).to eq(true)
     end
   end

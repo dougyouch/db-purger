@@ -40,7 +40,7 @@ module DBPurger
     # rubocop:disable Metrics/AbcSize
     def next_batch(start_id)
       scope = model
-              .select([model.primary_key] + @table.parent_fields)
+              .select([model.primary_key] + @table.foreign_keys)
               .where(@purge_field => @purge_value)
               .order(model.primary_key).limit(@table.batch_size)
       scope = scope.where("#{model.primary_key} > #{model.connection.quote(start_id)}") if start_id
@@ -57,7 +57,7 @@ module DBPurger
       ids = batch_values(batch, model.primary_key)
 
       @table.nested_schema.child_tables.each do |table|
-        next if table.parent_field
+        next if table.foreign_key
 
         PurgeTable.new(@database, table, table.field, ids).purge!
       end
@@ -71,8 +71,8 @@ module DBPurger
 
     def purge_foreign_tables(batch)
       @table.nested_schema.child_tables.each do |table|
-        next unless table.parent_field
-        next if (purge_values = batch_values(batch, table.parent_field)).empty?
+        next unless table.foreign_key
+        next if (purge_values = batch_values(batch, table.foreign_key)).empty?
 
         PurgeTable.new(@database, table, table.field, purge_values).purge!
       end
@@ -83,7 +83,7 @@ module DBPurger
     end
 
     def foreign_tables?
-      @table.nested_schema.child_tables.any?(&:parent_field)
+      @table.nested_schema.child_tables.any?(&:foreign_key)
     end
 
     def delete_records(batch)
