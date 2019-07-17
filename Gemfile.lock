@@ -16,7 +16,7 @@ GEM
     ast (2.4.0)
     concurrent-ruby (1.1.5)
     diff-lcs (1.3)
-    dynamic-active-model (0.2.4)
+    dynamic-active-model (0.2.5)
       activerecord
     factory_bot (5.0.2)
       activesupport (>= 4.2.0)

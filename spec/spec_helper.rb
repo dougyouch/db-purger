@@ -33,8 +33,9 @@ FileUtils.cp(DB_FILE, DB_FILE_BAK)
 
 TestDB = Module.new
 DYNAMIC_DATABASE = DynamicActiveModel::Database.new(TestDB, DB_CONFIG)
+DYNAMIC_DATABASE.skip_table('tmp_load_data_table')
 DYNAMIC_DATABASE.create_models!
-DynamicActiveModel::Relations.new(DYNAMIC_DATABASE).build!
+DynamicActiveModel::Associations.new(DYNAMIC_DATABASE).build!
 
 def reset_test_database
   FileUtils.cp(DB_FILE_BAK, DB_FILE)
