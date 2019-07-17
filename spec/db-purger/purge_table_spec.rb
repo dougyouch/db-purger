@@ -4,10 +4,10 @@ describe DBPurger::PurgeTable do
   let(:database) { DYNAMIC_DATABASE }
   let(:schema) do
     DBPurger::SchemaBuilder.build do
-      parent_table(:companies, :id) do
-        child_table(:employments, :company_id, 2) do
-          child_table(:employment_notes, :employment_id, 1)
-        end
+      top_table(:companies, :id)
+
+      child_table(:employments, :company_id, 2) do
+        child_table(:employment_notes, :employment_id, 1)
       end
     end
   end
@@ -41,7 +41,7 @@ describe DBPurger::PurgeTable do
     end
 
     describe 'nested deletion' do
-      let(:table) { schema.parent_tables.first }
+      let(:table) { schema.top_table }
       let(:company1) do
         create(:company, id: purge_value).tap do |c|
           create(:employment, company: c).tap do |employment|
