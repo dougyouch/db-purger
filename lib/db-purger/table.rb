@@ -25,12 +25,12 @@ module DBPurger
       @nested_schema != nil
     end
 
-    def table_names
-      if @nested_schema
-        [@name] + @nested_schema.table_names
-      else
-        [@name]
-      end
+    def tables
+      @nested_schema ? @nested_schema.tables : []
+    end
+
+    def fields
+      [@parent_field, @child_field].compact
     end
   end
 end

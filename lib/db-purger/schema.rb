@@ -17,13 +17,17 @@ module DBPurger
       PurgeTable.new(database, @top_table, @top_table.parent_field, purge_value).purge!
     end
 
+    def tables
+      all_tables = @top_table ? [@top_table] + @top_table.tables : []
+      all_tables += @parent_tables + @parent_tables.map(&:tables) +
+                    @child_tables + @child_tables.map(&:tables)
+      all_tables.flatten!
+      all_tables.compact!
+      all_tables
+    end
+
     def table_names
-      names = @top_table ? @top_table.table_names : []
-      names += @parent_tables.map(&:table_names)
-      names += @child_tables.map(&:table_names)
-      names.flatten!
-      names.compact!
-      names
+      tables.map(&:name)
     end
 
     def empty?
