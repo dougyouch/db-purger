@@ -37,7 +37,10 @@ DYNAMIC_DATABASE.skip_table('ar_internal_metadata')
 DYNAMIC_DATABASE.skip_table('schema_migrations')
 DYNAMIC_DATABASE.skip_table('tmp_load_data_table')
 DYNAMIC_DATABASE.create_models!
-DynamicActiveModel::Associations.new(DYNAMIC_DATABASE).build!
+DynamicActiveModel::Associations.new(DYNAMIC_DATABASE).tap do |assoc|
+  assoc.add_foreign_key('websites', 'company_website_id', 'company_website')
+  assoc.build!
+end
 
 def reset_test_database
   FileUtils.cp(DB_FILE_BAK, DB_FILE)

@@ -12,6 +12,9 @@ describe 'top level table' do
       child_table(:employments, :company_id, batch_size: 2) do
         child_table(:employment_notes, :employment_id, batch_size: 1)
       end
+
+      child_table(:websites, :id, parent_field: :website_id)
+      child_table(:websites, :id, parent_field: :company_website_id)
     end
   end
 
@@ -23,7 +26,7 @@ describe 'top level table' do
   let!(:tag4) { create :tag }
   let!(:tag5) { create :tag }
   let!(:company1) do
-    create(:company, id: purge_value).tap do |c|
+    create(:company, id: purge_value, website: create(:website), company_website: create(:website)).tap do |c|
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
@@ -58,7 +61,7 @@ describe 'top level table' do
     end
   end
   let!(:company2) do
-    create(:company).tap do |c|
+    create(:company, website: create(:website), company_website: create(:website)).tap do |c|
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
@@ -91,11 +94,13 @@ describe 'top level table' do
         expect {
           expect {
             expect {
-              subject
-            }.to change { TestDB::EmploymentNote.count }.by(-15)
-          }.to change { TestDB::Employment.count }.by(-8)
-        }.to change { TestDB::Company.count }.by(-1)
-      }.to change { TestDB::CompanyTag.count }.by(-3)
-    }.to change { TestDB::Tag.count }.by(0)
+              expect {
+                subject
+              }.to change { TestDB::EmploymentNote.count }.by(-15)
+            }.to change { TestDB::Employment.count }.by(-8)
+          }.to change { TestDB::Company.count }.by(-1)
+        }.to change { TestDB::CompanyTag.count }.by(-3)
+      }.to change { TestDB::Tag.count }.by(0)
+    }.to change { TestDB::Website.count }.by(-2)
   end
 end

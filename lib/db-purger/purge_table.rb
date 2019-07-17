@@ -72,8 +72,9 @@ module DBPurger
     def purge_foreign_tables(batch)
       @table.nested_schema.child_tables.each do |table|
         next unless table.parent_field
+        next if (purge_values = batch_values(batch, table.parent_field)).empty?
 
-        PurgeTable.new(@database, table, table.field, batch_values(batch, table.parent_field)).purge!
+        PurgeTable.new(@database, table, table.field, purge_values).purge!
       end
     end
 
