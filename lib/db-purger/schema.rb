@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module DBPurger
+  # DBPurger::Schema is used to describe the relationship between tables
   class Schema
     attr_accessor :top_table
 
@@ -10,6 +11,10 @@ module DBPurger
     def initialize
       @parent_tables = []
       @child_tables = []
+    end
+
+    def purge!(database, purge_value)
+      PurgeTable.new(database, @top_table, @top_table.parent_field, purge_value).purge!
     end
 
     def table_names

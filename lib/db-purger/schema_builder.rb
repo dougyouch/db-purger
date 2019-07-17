@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module DBPurger
+  # DBPurger::SchemaBuilder is used to build the relationships between tables in a convenient way
   class SchemaBuilder
     def initialize(schema)
       @schema = schema

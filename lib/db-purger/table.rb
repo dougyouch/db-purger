@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module DBPurger
+  # DBPurger::Table is an entity to keep track of basic table data
   class Table
     DEFAULT_BATCH_SIZE = 10_000
 

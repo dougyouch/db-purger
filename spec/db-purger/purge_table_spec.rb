@@ -41,7 +41,7 @@ describe DBPurger::PurgeTable do
     end
 
     describe 'nested deletion' do
-      let(:table) { schema.top_table }
+      subject { schema.purge!(DYNAMIC_DATABASE, purge_value) }
       let(:company1) do
         create(:company, id: purge_value).tap do |c|
           create(:employment, company: c).tap do |employment|

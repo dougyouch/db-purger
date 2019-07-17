@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module DBPurger
+  # DBPurger::PurgeTable is used to delete table from tables in batches if possible
   class PurgeTable
     def initialize(database, table, purge_field, purge_value)
       @database = database
@@ -36,6 +37,7 @@ module DBPurger
       end
     end
 
+    # rubocop:disable Metrics/AbcSize
     def next_batch(start_id)
       scope = model
               .select(model.primary_key)
@@ -44,6 +46,7 @@ module DBPurger
       scope = scope.where("#{model.primary_key} > #{model.connection.quote(start_id)}") if start_id
       scope.map { |record| record.send(model.primary_key) }
     end
+    # rubocop:enable Metrics/AbcSize
 
     def purge_nested_tables(batch)
       @table.nested_schema.child_tables.each do |table|
