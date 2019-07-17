@@ -37,4 +37,9 @@ FactoryBot.define do
     company
     tag
   end
+
+  factory :event, class: 'TestDB::Event' do
+    name { 'Event ' + SecureRandom.hex(8) }
+    occurred_at { Time.now }
+  end
 end

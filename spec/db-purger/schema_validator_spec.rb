@@ -18,7 +18,10 @@ describe DBPurger::SchemaValidator do
         child_table(:employments, :company_id) do
           child_table(:employment_notes, :employment_id)
           child_table(:stats_employment_durations, :employment_id)
+          child_table(:events, :model_id, conditions: {model_type: 'Employment'})
         end
+
+        child_table(:events, :model_id, conditions: {model_type: 'Company'})
 
         ignore_table :users
         ignore_table :jobs
@@ -43,6 +46,8 @@ describe DBPurger::SchemaValidator do
             child_table(:employment_notes, :employment_id)
             child_table(:stats_employment_durations, :employment_id)
           end
+
+          child_table(:events, :model_id, conditions: {model_type: 'Company'})
 
           ignore_table :users
           ignore_table :jobs
@@ -72,6 +77,8 @@ describe DBPurger::SchemaValidator do
             child_table(:employment_statuses, :employment_id)
           end
 
+          child_table(:events, :model_id, conditions: {model_type: 'Company'})
+
           ignore_table :users
           ignore_table :jobs
           ignore_table :websites
@@ -99,6 +106,8 @@ describe DBPurger::SchemaValidator do
             child_table(:employment_notes, :employment_id)
             child_table(:stats_employment_durations, :employment_id)
           end
+
+          child_table(:events, :model_id, conditions: {model_type: 'Company'})
 
           ignore_table :users
           ignore_table :jobs

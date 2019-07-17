@@ -40,6 +40,13 @@ ActiveRecord::Schema.define(version: 20190712000000) do
     t.integer "tag_id"
   end
 
+  create_table "events", force: true do |t|
+    t.string "model_type"
+    t.integer "model_id"
+    t.string "name"
+    t.datetime "occurred_at"
+  end
+
   create_table "stats_employment_durations", force: true do |t|
     t.integer "employment_id"
     t.integer "duration"
