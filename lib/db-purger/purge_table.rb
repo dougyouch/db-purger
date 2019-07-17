@@ -25,7 +25,9 @@ module DBPurger
     private
 
     def purge_all!
-      model.where(@purge_field => @purge_value).delete_all
+      scope = model.where(@purge_field => @purge_value)
+      scope = scope.where(@table.conditions) if @table.conditions
+      scope.delete_all
     end
 
     def purge_in_batches!
@@ -43,6 +45,7 @@ module DBPurger
               .select([model.primary_key] + @table.foreign_keys)
               .where(@purge_field => @purge_value)
               .order(model.primary_key).limit(@table.batch_size)
+      scope = scope.where(@table.conditions) if @table.conditions
       scope = scope.where("#{model.primary_key} > #{model.connection.quote(start_id)}") if start_id
       scope.to_a
     end

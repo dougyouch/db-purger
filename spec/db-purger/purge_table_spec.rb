@@ -17,7 +17,7 @@ describe DBPurger::PurgeTable do
     let(:field) { :id }
     let(:foreign_key) { nil }
     let(:batch_size) { 2 }
-    let(:table) { DBPurger::Table.new(table_name, field, foreign_key, batch_size) }
+    let(:table) { DBPurger::Table.new(table_name, field).tap { |t| t.batch_size = batch_size; t.foreign_key = foreign_key } }
     let(:purge_field) { :id }
     let(:purge_value) { 1 }
     let(:purge_table) { DBPurger::PurgeTable.new(database, table, purge_field, purge_value) }

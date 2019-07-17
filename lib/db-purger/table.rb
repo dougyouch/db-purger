@@ -5,16 +5,17 @@ module DBPurger
   class Table
     DEFAULT_BATCH_SIZE = 10_000
 
-    attr_reader :name,
-                :field,
-                :foreign_key,
-                :batch_size
+    attr_accessor :foreign_key,
+                  :batch_size,
+                  :conditions
 
-    def initialize(name, field, foreign_key = nil, batch_size = nil)
+    attr_reader :name,
+                :field
+
+    def initialize(name, field)
       @name = name
       @field = field
-      @foreign_key = foreign_key
-      @batch_size = batch_size || DEFAULT_BATCH_SIZE
+      @batch_size = DEFAULT_BATCH_SIZE
     end
 
     def nested_schema

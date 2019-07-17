@@ -8,11 +8,11 @@ module DBPurger
     end
 
     def base_table(table_name, field, options = {}, &block)
-      @schema.base_table = create_table(table_name, field, nil, options[:batch_size], &block)
+      @schema.base_table = create_table(table_name, field, options, &block)
     end
 
     def parent_table(table_name, field, options = {}, &block)
-      table = create_table(table_name, field, options[:foreign_key], options[:batch_size], &block)
+      table = create_table(table_name, field, options, &block)
       if @schema.base_table
         @schema.base_table.nested_schema.parent_tables << table
       else
@@ -22,7 +22,7 @@ module DBPurger
     end
 
     def child_table(table_name, field, options = {}, &block)
-      table = create_table(table_name, field, options[:foreign_key], options[:batch_size], &block)
+      table = create_table(table_name, field, options, &block)
       if @schema.base_table
         @schema.base_table.nested_schema.child_tables << table
       else
@@ -44,8 +44,11 @@ module DBPurger
 
     private
 
-    def create_table(table_name, field, foreign_key, batch_size, &block)
-      table = Table.new(table_name, field, foreign_key, batch_size)
+    def create_table(table_name, field, options, &block)
+      table = Table.new(table_name, field)
+      table.foreign_key = options[:foreign_key]
+      table.batch_size = options[:batch_size]
+      table.conditions = options[:conditions]
       build_nested_schema(table, &block) if block
       table
     end
