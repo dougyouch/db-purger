@@ -46,15 +46,9 @@ module DBPurger
         return
       end
 
-      table.fields.each do |field|
-        next if model.column_names.include?(field.to_s)
-
-        errors.add(:table, "#{table.name}.#{field} is missing in the database")
+      unless model.column_names.include?(table.field.to_s)
+        errors.add(:table, "#{table.name}.#{table.field} is missing in the database")
       end
-    end
-
-    def model_has_field?(model, field)
-      field.nil? || model.column_names.include?(field.to_s)
     end
 
     def find_model_for_table(table)

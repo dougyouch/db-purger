@@ -10,8 +10,8 @@ describe DBPurger::SchemaBuilder do
 
     it 'creates a top table with a nested schema' do
       expect(subject.name).to eq(table_name)
-      expect(subject.parent_field).to eq(:parent_id)
-      expect(subject.child_field).to eq(nil)
+      expect(subject.field).to eq(:parent_id)
+      expect(subject.parent_field).to eq(nil)
     end
   end
 
@@ -20,8 +20,8 @@ describe DBPurger::SchemaBuilder do
 
     it 'creates a top table with a nested schema' do
       expect(subject.name).to eq(:my_parent_table)
-      expect(subject.parent_field).to eq(:parent_id)
-      expect(subject.child_field).to eq(nil)
+      expect(subject.field).to eq(:parent_id)
+      expect(subject.parent_field).to eq(nil)
     end
   end
 
@@ -30,8 +30,8 @@ describe DBPurger::SchemaBuilder do
 
     it 'creates a top table with a nested schema' do
       expect(subject.name).to eq(:my_child_table)
+      expect(subject.field).to eq(:child_id)
       expect(subject.parent_field).to eq(nil)
-      expect(subject.child_field).to eq(:child_id)
     end
   end
 
@@ -49,16 +49,16 @@ describe DBPurger::SchemaBuilder do
 
     it 'builds a schema' do
       expect(subject.top_table.name).to eq(:my_top_table)
-      expect(subject.top_table.parent_field).to eq(:parent_id)
-      expect(subject.top_table.child_field).to eq(nil)
+      expect(subject.top_table.field).to eq(:parent_id)
+      expect(subject.top_table.parent_field).to eq(nil)
       expect(subject.table_names).to eq([:my_top_table, :my_parent_table, :my_child_table])
       expect(top_table.nested_schema.parent_tables.first.name).to eq(:my_parent_table)
-      expect(top_table.nested_schema.parent_tables.first.parent_field).to eq(:parent_id)
-      expect(top_table.nested_schema.parent_tables.first.child_field).to eq(nil)
+      expect(top_table.nested_schema.parent_tables.first.field).to eq(:parent_id)
+      expect(top_table.nested_schema.parent_tables.first.parent_field).to eq(nil)
       expect(top_table.nested_schema.parent_tables.first.nested_schema.empty?).to eq(true)
       expect(top_table.nested_schema.child_tables.first.name).to eq(:my_child_table)
+      expect(top_table.nested_schema.child_tables.first.field).to eq(:child_id)
       expect(top_table.nested_schema.child_tables.first.parent_field).to eq(nil)
-      expect(top_table.nested_schema.child_tables.first.child_field).to eq(:child_id)
       expect(top_table.nested_schema.child_tables.first.nested_schema.empty?).to eq(true)
     end
   end

@@ -6,14 +6,14 @@ module DBPurger
     DEFAULT_BATCH_SIZE = 10_000
 
     attr_reader :name,
+                :field,
                 :parent_field,
-                :child_field,
                 :batch_size
 
-    def initialize(name, parent_field, child_field, batch_size = nil)
+    def initialize(name, field, parent_field = nil, batch_size = nil)
       @name = name
+      @field = field
       @parent_field = parent_field
-      @child_field = child_field
       @batch_size = batch_size || DEFAULT_BATCH_SIZE
     end
 
@@ -27,10 +27,6 @@ module DBPurger
 
     def tables
       @nested_schema ? @nested_schema.tables : []
-    end
-
-    def fields
-      [@parent_field, @child_field].compact
     end
   end
 end

@@ -16,7 +16,7 @@ module DBPurger
     end
 
     def purge!(database, purge_value)
-      PurgeTable.new(database, @top_table, @top_table.parent_field, purge_value).purge!
+      PurgeTable.new(database, @top_table, @top_table.field, purge_value).purge!
     end
 
     def tables
