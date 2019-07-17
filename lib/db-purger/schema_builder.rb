@@ -4,18 +4,18 @@ module DBPurger
       @schema = schema
     end
 
-    def top_table(table_name, parent_field, child_field = nil, &block)
-      @schema.top_table = create_table(table_name, parent_field, child_field, &block)
+    def top_table(table_name, parent_field, child_field = nil, batch_size = nil, &block)
+      @schema.top_table = create_table(table_name, parent_field, child_field, batch_size, &block)
     end
 
-    def parent_table(table_name, parent_field, child_field = nil, &block)
-      table = create_table(table_name, parent_field, child_field, &block)
+    def parent_table(table_name, parent_field, child_field = nil, batch_size = nil, &block)
+      table = create_table(table_name, parent_field, child_field, batch_size, &block)
       @schema.parent_tables << table
       table
     end
 
-    def child_table(table_name, child_field, &block)
-      table = create_table(table_name, nil, child_field, &block)
+    def child_table(table_name, child_field, batch_size = nil, &block)
+      table = create_table(table_name, nil, child_field, batch_size, &block)
       @schema.child_tables << table
       table
     end
@@ -29,8 +29,8 @@ module DBPurger
 
     private
 
-    def create_table(table_name, parent_field, child_field, &block)
-      table = Table.new(table_name, parent_field, child_field)
+    def create_table(table_name, parent_field, child_field, batch_size, &block)
+      table = Table.new(table_name, parent_field, child_field, batch_size)
       build_nested_schema(table, &block) if block
       table
     end

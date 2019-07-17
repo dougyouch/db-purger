@@ -44,10 +44,10 @@ module DBPurger
     end
 
     def purge_nested_tables(batch)
-      @table.child_tables.each do |table|
+      @table.nested_schema.child_tables.each do |table|
         PurgeTable.new(@database, table, table.child_field, batch).purge!
       end
-      @table.parent_tables.each do |table|
+      @table.nested_schema.parent_tables.each do |table|
         PurgeTable.new(@database, table, table.parent_field, batch).purge!
       end
     end

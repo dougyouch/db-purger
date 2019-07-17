@@ -34,10 +34,13 @@ FileUtils.cp(DB_FILE, DB_FILE_BAK)
 TestDB =  Module.new
 DYNAMIC_DATABASE = DynamicActiveModel::Database.new(TestDB, DB_CONFIG)
 DYNAMIC_DATABASE.create_models!
+DynamicActiveModel::Relations.new(DYNAMIC_DATABASE).build!
 
 def reset_test_database
   FileUtils.cp(DB_FILE_BAK, DB_FILE)
 end
+
+# ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 require 'factories/test_factory'
 RSpec.configure do |config|

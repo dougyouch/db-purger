@@ -26,6 +26,11 @@ ActiveRecord::Schema.define(version: 20190712000000) do
     t.datetime "ended_at"
   end
 
+  create_table "employment_notes", force: true do |t|
+    t.integer "employment_id"
+    t.string "note"
+  end
+
   create_table "stats_employment_durations", force: true do |t|
     t.integer "employment_id"
     t.integer "duration"
