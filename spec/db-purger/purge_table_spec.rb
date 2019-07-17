@@ -28,9 +28,12 @@ describe DBPurger::PurgeTable do
       let(:company2) { create :company }
 
       before(:each) do
-        reset_test_database
         company1
         company2
+      end
+
+      after(:each) do
+        reset_test_database
       end
 
       it 'purges company 1' do
@@ -91,9 +94,12 @@ describe DBPurger::PurgeTable do
       end
 
       before(:each) do
-        reset_test_database
         company1
         company2
+      end
+
+      after(:each) do
+        reset_test_database
       end
 
       it 'purges company 1 and associated data' do

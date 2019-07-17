@@ -4,5 +4,6 @@ Metrics/LineLength:
   Max: 120
 AllCops:
   Exclude:
+    - 'spec/factories/test_factory.rb'
     - 'spec/support/db/schema.rb'
     - 'spec/**/*_spec.rb'
