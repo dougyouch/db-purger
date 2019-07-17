@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DBPurger
   class Schema
     attr_accessor :top_table

@@ -31,7 +31,7 @@ ActiveRecord::Schema.verbose = false
 require 'support/db/schema'
 FileUtils.cp(DB_FILE, DB_FILE_BAK)
 
-TestDB =  Module.new
+TestDB = Module.new
 DYNAMIC_DATABASE = DynamicActiveModel::Database.new(TestDB, DB_CONFIG)
 DYNAMIC_DATABASE.create_models!
 DynamicActiveModel::Relations.new(DYNAMIC_DATABASE).build!

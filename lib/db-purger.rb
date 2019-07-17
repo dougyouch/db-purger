@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DBPurger
   autoload :PurgeTable, 'db-purger/purge_table'
   autoload :Schema, 'db-purger/schema'

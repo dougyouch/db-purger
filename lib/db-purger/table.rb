@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DBPurger
   class Table
     DEFAULT_BATCH_SIZE = 10_000

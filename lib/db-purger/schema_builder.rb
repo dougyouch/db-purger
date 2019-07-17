@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module DBPurger
   class SchemaBuilder
     def initialize(schema)
