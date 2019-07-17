@@ -10,7 +10,7 @@ describe DBPurger::SchemaValidator do
 
     let(:schema) do
       DBPurger::SchemaBuilder.build do
-        top_table(:companies, :id)
+        base_table(:companies, :id)
 
         parent_table(:company_tags, :company_id)
         parent_table(:stats_company_employments, :company_id)
@@ -34,7 +34,7 @@ describe DBPurger::SchemaValidator do
     describe 'missing_tables' do
       let(:schema) do
         DBPurger::SchemaBuilder.build do
-          top_table(:companies, :id)
+          base_table(:companies, :id)
 
           parent_table(:company_tags, :company_id)
           parent_table(:stats_company_employments, :company_id)
@@ -61,7 +61,7 @@ describe DBPurger::SchemaValidator do
     describe 'unknown_tables' do
       let(:schema) do
         DBPurger::SchemaBuilder.build do
-          top_table(:companies, :id)
+          base_table(:companies, :id)
 
           parent_table(:company_tags, :company_id)
           parent_table(:stats_company_employments, :company_id)
@@ -90,7 +90,7 @@ describe DBPurger::SchemaValidator do
     describe 'invalid table definition' do
       let(:schema) do
         DBPurger::SchemaBuilder.build do
-          top_table(:companies, :id)
+          base_table(:companies, :id)
 
           parent_table(:company_tags, :company_id)
           parent_table(:stats_company_employments, :company_id)

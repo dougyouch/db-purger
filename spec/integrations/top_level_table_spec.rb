@@ -5,7 +5,7 @@ describe 'top level table' do
   let(:purge_value) { 1 }
   let(:schema) do
     DBPurger::SchemaBuilder.build do
-      top_table(:companies, :id)
+      base_table(:companies, :id)
 
       parent_table(:company_tags, :company_id)
 
