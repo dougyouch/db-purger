@@ -31,29 +31,72 @@ module DBPurger
     def purge_in_batches!
       start_id = nil
       until (batch = next_batch(start_id)).empty?
-        start_id = batch.last
+        start_id = batch.last.send(model.primary_key)
         purge_nested_tables(batch) if @table.nested_tables?
-        model.where(model.primary_key => batch).delete_all
+        delete_records(batch)
       end
     end
 
     # rubocop:disable Metrics/AbcSize
     def next_batch(start_id)
       scope = model
-              .select(model.primary_key)
+              .select([model.primary_key] + @table.parent_fields)
               .where(@purge_field => @purge_value)
               .order(model.primary_key).limit(@table.batch_size)
       scope = scope.where("#{model.primary_key} > #{model.connection.quote(start_id)}") if start_id
-      scope.map { |record| record.send(model.primary_key) }
+      scope.to_a
     end
     # rubocop:enable Metrics/AbcSize
 
     def purge_nested_tables(batch)
+      purge_child_tables(batch) unless @table.nested_schema.child_tables.empty?
+      purge_parent_tables
+    end
+
+    def purge_child_tables(batch)
+      ids = batch_values(batch, model.primary_key)
+
       @table.nested_schema.child_tables.each do |table|
-        PurgeTable.new(@database, table, table.field, batch).purge!
+        next if table.parent_field
+
+        PurgeTable.new(@database, table, table.field, ids).purge!
       end
+    end
+
+    def purge_parent_tables
       @table.nested_schema.parent_tables.each do |table|
         PurgeTable.new(@database, table, table.field, @purge_value).purge!
+      end
+    end
+
+    def purge_foreign_tables(batch)
+      @table.nested_schema.child_tables.each do |table|
+        next unless table.parent_field
+
+        PurgeTable.new(@database, table, table.field, batch_values(batch, table.parent_field)).purge!
+      end
+    end
+
+    def batch_values(batch, field)
+      batch.map { |record| record.send(field) }.compact
+    end
+
+    def foreign_tables?
+      @table.nested_schema.child_tables.any?(&:parent_field)
+    end
+
+    def delete_records(batch)
+      if foreign_tables?
+        delete_records_and_foreign_tables(batch)
+      else
+        model.where(model.primary_key => batch_values(batch, model.primary_key)).delete_all
+      end
+    end
+
+    def delete_records_and_foreign_tables(batch)
+      model.transaction do
+        model.where(model.primary_key => batch_values(batch, model.primary_key)).delete_all
+        purge_foreign_tables(batch)
       end
     end
   end
