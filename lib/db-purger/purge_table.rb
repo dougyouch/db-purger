@@ -53,7 +53,7 @@ module DBPurger
         PurgeTable.new(@database, table, table.child_field, batch).purge!
       end
       @table.nested_schema.parent_tables.each do |table|
-        PurgeTable.new(@database, table, table.parent_field, batch).purge!
+        PurgeTable.new(@database, table, table.parent_field, @purge_value).purge!
       end
     end
   end
