@@ -46,6 +46,7 @@ module DBPurger
   end
 end
 DBPurger::TestSubscriber.attach_to :db_purger
+DBPurger::MetricSubscriber.attach_to :db_purger
 
 # ActiveRecord::Base.logger = Logger.new(STDOUT)
 

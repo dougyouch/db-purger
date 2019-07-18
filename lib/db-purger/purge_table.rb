@@ -10,6 +10,7 @@ module DBPurger
       @table = table
       @purge_field = purge_field
       @purge_value = purge_value
+      @num_deleted = 0
     end
 
     def model

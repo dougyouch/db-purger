@@ -8,6 +8,7 @@ module DBPurger
     def initialize(database, table)
       @database = database
       @table = table
+      @num_deleted = 0
     end
 
     def model
