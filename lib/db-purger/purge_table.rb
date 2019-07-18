@@ -10,7 +10,6 @@ module DBPurger
       @table = table
       @purge_field = purge_field
       @purge_value = purge_value
-      @num_deleted = 0
     end
 
     def model
@@ -27,7 +26,7 @@ module DBPurger
           purge_all!
         end
         purge_search_tables
-        payload[:num_deleted] = @num_deleted
+        payload[:deleted] = @num_deleted
       end
     end
 
@@ -36,11 +35,7 @@ module DBPurger
     def purge_all!
       scope = model.where(@purge_field => @purge_value)
       scope = scope.where(@table.conditions) if @table.conditions
-      ActiveSupport::Notifications.instrument('delete_all.db_purger',
-                                              table_name: @table.name) do |payload|
-        payload[:num_deleted] = scope.delete_all
-        @num_deleted += payload[:num_deleted]
-      end
+      delete_records_with_instrumentation(scope)
     end
 
     def purge_in_batches!

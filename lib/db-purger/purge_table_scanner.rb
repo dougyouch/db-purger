@@ -8,7 +8,6 @@ module DBPurger
     def initialize(database, table)
       @database = database
       @table = table
-      @num_deleted = 0
     end
 
     def model
@@ -20,7 +19,7 @@ module DBPurger
                                               table_name: @table.name) do |payload|
         purge_in_batches!
         purge_search_tables
-        payload[:num_deleted] = @num_deleted
+        payload[:deleted] = @num_deleted
       end
     end
 

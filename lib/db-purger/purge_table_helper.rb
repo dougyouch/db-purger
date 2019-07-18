@@ -47,12 +47,15 @@ module DBPurger
       @table.nested_schema.child_tables.any?(&:foreign_key)
     end
 
-    def delete_records_with_instrumentation(ids)
+    def delete_records_with_instrumentation(scope, num_records = nil)
+      @num_deleted ||= 0
       ActiveSupport::Notifications.instrument('delete_records.db_purger',
                                               table_name: @table.name,
-                                              num_records: ids.size) do |payload|
-        payload[:num_deleted] = model.where(model.primary_key => ids).delete_all
-        @num_deleted += payload[:num_deleted]
+                                              num_records: num_records) do |payload|
+        records_deleted = scope.delete_all
+        @num_deleted += records_deleted
+        payload[:records_deleted] = records_deleted
+        payload[:deleted] = @num_deleted
       end
     end
 
@@ -60,15 +63,21 @@ module DBPurger
       if foreign_tables?
         delete_records_and_foreign_tables(batch)
       else
-        delete_records_with_instrumentation(batch_values(batch, model.primary_key))
+        delete_records_by_primary_key(batch)
       end
     end
 
     def delete_records_and_foreign_tables(batch)
       model.transaction do
-        delete_records_with_instrumentation(batch_values(batch, model.primary_key))
+        delete_records_by_primary_key(batch)
         purge_foreign_tables(batch)
       end
+    end
+
+    def delete_records_by_primary_key(batch)
+      ids = batch_values(batch, model.primary_key)
+      scope = model.where(model.primary_key => ids)
+      delete_records_with_instrumentation(scope, ids.size)
     end
 
     def purge_search_tables
