@@ -50,7 +50,8 @@ module DBPurger
 
     def next_batch(start_id)
       ActiveSupport::Notifications.instrument('next_batch.db_purger',
-                                              table_name: @table.name) do |payload|
+                                              table_name: @table.name,
+                                              start_id: start_id) do |payload|
         records = batch_scope(start_id).to_a
         payload[:num_records] = records.size
         records

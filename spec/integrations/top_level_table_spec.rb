@@ -158,6 +158,8 @@ describe 'top level table' do
           }.to change { TestDB::Tag.count }.by(0)
         }.to change { TestDB::Website.count }.by(0)
       }.to change { TestDB::Event.count }.by(0)
+
+      expect(DBPurger::TestSubscriber.tables[:employments][:deleted]).to eq(8)
     end
   end
 end

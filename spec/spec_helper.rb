@@ -19,6 +19,34 @@ require 'db-purger'
 
 require 'support/test_db'
 
+module DBPurger
+  class TestSubscriber < ActiveSupport::Subscriber
+    def self.tables
+      @tables ||= {}
+    end
+
+    def tables
+      self.class.tables
+    end
+
+    def purge(event)
+      tables[event.payload[:table_name]] ||= {}
+      tables[event.payload[:table_name]][:deleted] = event.payload[:deleted]
+    end
+
+    def delete_records(event)
+      tables[event.payload[:table_name]] ||= {}
+      tables[event.payload[:table_name]][:records_deleted] = event.payload[:records_deleted]
+    end
+
+    def next_batch(event)
+      tables[event.payload[:table_name]] ||= {}
+      tables[event.payload[:table_name]][:num_records] = event.payload[:num_records]
+    end
+  end
+end
+DBPurger::TestSubscriber.attach_to :db_purger
+
 # ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 require 'factories/test_factory'
