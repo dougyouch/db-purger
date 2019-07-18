@@ -2,8 +2,8 @@ require 'spec_helper'
 
 describe DBPurger::PurgeTable do
   let(:database) { DYNAMIC_DATABASE }
-  let(:schema) do
-    DBPurger::SchemaBuilder.build do
+  let(:plan) do
+    DBPurger::PlanBuilder.build do
       base_table(:companies, :id)
 
       child_table(:employments, :company_id, batch_size: 2) do
@@ -44,7 +44,7 @@ describe DBPurger::PurgeTable do
     end
 
     describe 'nested deletion' do
-      subject { schema.purge!(DYNAMIC_DATABASE, purge_value) }
+      subject { plan.purge!(DYNAMIC_DATABASE, purge_value) }
       let(:company1) do
         create(:company, id: purge_value).tap do |c|
           create(:employment, company: c).tap do |employment|

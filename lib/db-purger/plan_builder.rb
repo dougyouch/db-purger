@@ -1,60 +1,60 @@
 # frozen_string_literal: true
 
 module DBPurger
-  # DBPurger::SchemaBuilder is used to build the relationships between tables in a convenient way
-  class SchemaBuilder
-    def initialize(schema)
-      @schema = schema
+  # DBPurger::PlanBuilder is used to build the relationships between tables in a convenient way
+  class PlanBuilder
+    def initialize(plan)
+      @plan = plan
     end
 
     def base_table(table_name, field, options = {}, &block)
-      @schema.base_table = create_table(table_name, field, options, &block)
+      @plan.base_table = create_table(table_name, field, options, &block)
     end
 
     def parent_table(table_name, field, options = {}, &block)
       table = create_table(table_name, field, options, &block)
-      if @schema.base_table
-        @schema.base_table.nested_schema.parent_tables << table
+      if @plan.base_table
+        @plan.base_table.nested_plan.parent_tables << table
       else
-        @schema.parent_tables << table
+        @plan.parent_tables << table
       end
       table
     end
 
     def child_table(table_name, field, options = {}, &block)
       table = create_table(table_name, field, options, &block)
-      if @schema.base_table
-        @schema.base_table.nested_schema.child_tables << table
+      if @plan.base_table
+        @plan.base_table.nested_plan.child_tables << table
       else
-        @schema.child_tables << table
+        @plan.child_tables << table
       end
       table
     end
 
     def ignore_table(table_name)
-      @schema.ignore_tables << table_name
+      @plan.ignore_tables << table_name
     end
 
     def purge_table_search(table_name, field, options = {}, &block)
       table = create_table(table_name, field, options)
       table.search_proc = block || raise('no block given for search_proc')
-      if @schema.base_table
-        @schema.base_table.nested_schema.search_tables << table
+      if @plan.base_table
+        @plan.base_table.nested_plan.search_tables << table
       else
-        @schema.search_tables << table
+        @plan.search_tables << table
       end
       table
     end
 
     def self.build(&block)
-      schema = Schema.new
-      helper = new(schema)
+      plan = Plan.new
+      helper = new(plan)
       helper.instance_eval(&block)
-      schema
+      plan
     end
 
-    def build_nested_schema(table, &block)
-      helper = self.class.new(table.nested_schema)
+    def build_nested_plan(table, &block)
+      helper = self.class.new(table.nested_plan)
       helper.instance_eval(&block)
     end
 
@@ -65,7 +65,7 @@ module DBPurger
       table.foreign_key = options[:foreign_key]
       table.batch_size = options[:batch_size]
       table.conditions = options[:conditions]
-      build_nested_schema(table, &block) if block
+      build_nested_plan(table, &block) if block
       table
     end
   end

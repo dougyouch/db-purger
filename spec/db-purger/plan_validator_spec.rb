@@ -1,15 +1,15 @@
 require 'spec_helper'
 
-describe DBPurger::SchemaValidator do
+describe DBPurger::PlanValidator do
   let(:database) { DYNAMIC_DATABASE }
   let(:purge_value) { 1 }
-  let(:schema_validator) { DBPurger::SchemaValidator.new(database, schema) }
+  let(:plan_validator) { DBPurger::PlanValidator.new(database, plan) }
 
   context '#valid?' do
-    subject { schema_validator.valid? }
+    subject { plan_validator.valid? }
 
-    let(:schema) do
-      DBPurger::SchemaBuilder.build do
+    let(:plan) do
+      DBPurger::PlanBuilder.build do
         base_table(:companies, :id)
 
         parent_table(:company_tags, :company_id)
@@ -35,8 +35,8 @@ describe DBPurger::SchemaValidator do
     end
 
     describe 'missing_tables' do
-      let(:schema) do
-        DBPurger::SchemaBuilder.build do
+      let(:plan) do
+        DBPurger::PlanBuilder.build do
           base_table(:companies, :id)
 
           parent_table(:company_tags, :company_id)
@@ -57,15 +57,15 @@ describe DBPurger::SchemaValidator do
 
       it 'returns false if missing tables' do
         expect(subject).to eq(false)
-        expect(schema_validator.errors[:missing_tables].empty?).to eq(false)
-        expect(schema_validator.errors[:table].empty?).to eq(true)
-        expect(schema_validator.errors[:unknown_tables].empty?).to eq(true)
+        expect(plan_validator.errors[:missing_tables].empty?).to eq(false)
+        expect(plan_validator.errors[:table].empty?).to eq(true)
+        expect(plan_validator.errors[:unknown_tables].empty?).to eq(true)
       end
     end
 
     describe 'unknown_tables' do
-      let(:schema) do
-        DBPurger::SchemaBuilder.build do
+      let(:plan) do
+        DBPurger::PlanBuilder.build do
           base_table(:companies, :id)
 
           parent_table(:company_tags, :company_id)
@@ -88,15 +88,15 @@ describe DBPurger::SchemaValidator do
 
       it 'returns false if unknown tables' do
         expect(subject).to eq(false)
-        expect(schema_validator.errors[:missing_tables].empty?).to eq(true)
-        expect(schema_validator.errors[:table].empty?).to eq(false)
-        expect(schema_validator.errors[:unknown_tables].empty?).to eq(false)
+        expect(plan_validator.errors[:missing_tables].empty?).to eq(true)
+        expect(plan_validator.errors[:table].empty?).to eq(false)
+        expect(plan_validator.errors[:unknown_tables].empty?).to eq(false)
       end
     end
 
     describe 'invalid table definition' do
-      let(:schema) do
-        DBPurger::SchemaBuilder.build do
+      let(:plan) do
+        DBPurger::PlanBuilder.build do
           base_table(:companies, :id)
 
           parent_table(:company_tags, :company_id)
@@ -118,9 +118,9 @@ describe DBPurger::SchemaValidator do
 
       it 'returns false if bad table definitions' do
         expect(subject).to eq(false)
-        expect(schema_validator.errors[:missing_tables].empty?).to eq(true)
-        expect(schema_validator.errors[:table].empty?).to eq(false)
-        expect(schema_validator.errors[:unknown_tables].empty?).to eq(true)
+        expect(plan_validator.errors[:missing_tables].empty?).to eq(true)
+        expect(plan_validator.errors[:table].empty?).to eq(false)
+        expect(plan_validator.errors[:unknown_tables].empty?).to eq(true)
       end
     end
   end

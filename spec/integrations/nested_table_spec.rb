@@ -3,14 +3,14 @@ require 'spec_helper'
 describe 'nested table' do
   let(:database) { DYNAMIC_DATABASE }
   let(:purge_value) { 1 }
-  let(:schema) do
-    DBPurger::SchemaBuilder.build do
+  let(:plan) do
+    DBPurger::PlanBuilder.build do
       base_table(:employments, :company_id, batch_size: 2)
       child_table(:employment_notes, :employment_id, batch_size: 1)
     end
   end
 
-  subject { schema.purge!(database, purge_value) }
+  subject { plan.purge!(database, purge_value) }
 
   let!(:tag1) { create :tag }
   let!(:tag2) { create :tag }

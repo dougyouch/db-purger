@@ -3,8 +3,8 @@ require 'spec_helper'
 describe 'top level table' do
   let(:database) { DYNAMIC_DATABASE }
   let(:purge_value) { 1 }
-  let(:schema) do
-    DBPurger::SchemaBuilder.build do
+  let(:plan) do
+    DBPurger::PlanBuilder.build do
       base_table(:companies, :id)
 
       parent_table(:company_tags, :company_id)
@@ -26,13 +26,13 @@ describe 'top level table' do
           users.delete(record.user_id)
         end
         users.values
-      end.nested_schema do
+      end.nested_plan do
         child_table(:events, :model_id, conditions: {model_type: 'TestDB::User'})
       end
     end
   end
 
-  subject { schema.purge!(database, purge_value) }
+  subject { plan.purge!(database, purge_value) }
 
   let!(:tag1) { create :tag }
   let!(:tag2) { create :tag }

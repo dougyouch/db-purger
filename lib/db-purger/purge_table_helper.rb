@@ -10,14 +10,14 @@ module DBPurger
     private
 
     def purge_nested_tables(batch)
-      purge_child_tables(batch) unless @table.nested_schema.child_tables.empty?
+      purge_child_tables(batch) unless @table.nested_plan.child_tables.empty?
       purge_parent_tables
     end
 
     def purge_child_tables(batch)
       ids = batch_values(batch, model.primary_key)
 
-      @table.nested_schema.child_tables.each do |table|
+      @table.nested_plan.child_tables.each do |table|
         next if table.foreign_key
 
         PurgeTable.new(@database, table, table.field, ids).purge!
@@ -25,13 +25,13 @@ module DBPurger
     end
 
     def purge_parent_tables
-      @table.nested_schema.parent_tables.each do |table|
+      @table.nested_plan.parent_tables.each do |table|
         PurgeTable.new(@database, table, table.field, @purge_value).purge!
       end
     end
 
     def purge_foreign_tables(batch)
-      @table.nested_schema.child_tables.each do |table|
+      @table.nested_plan.child_tables.each do |table|
         next unless table.foreign_key
         next if (purge_values = batch_values(batch, table.foreign_key)).empty?
 
@@ -44,7 +44,7 @@ module DBPurger
     end
 
     def foreign_tables?
-      @table.nested_schema.child_tables.any?(&:foreign_key)
+      @table.nested_plan.child_tables.any?(&:foreign_key)
     end
 
     def delete_records_with_instrumentation(scope, num_records = nil)
@@ -88,7 +88,7 @@ module DBPurger
     end
 
     def purge_search_tables
-      @table.nested_schema.search_tables.each do |table|
+      @table.nested_plan.search_tables.each do |table|
         PurgeTableScanner.new(@database, table).purge!
       end
     end

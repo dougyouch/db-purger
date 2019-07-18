@@ -1,29 +1,29 @@
 # frozen_string_literal: true
 
 module DBPurger
-  # DBPurger::SchemaValidator is used to ensure that all tables in the database are part of the purge plan.
+  # DBPurger::PlanValidator is used to ensure that all tables in the database are part of the purge plan.
   #  It verifies that all table definitions are correct as well, checking that child/parent fields are part
   #  of the table.
-  class SchemaValidator
+  class PlanValidator
     include ActiveModel::Validations
 
     validate :validate_no_missing_tables
     validate :validate_no_unknown_tables
     validate :validate_tables
 
-    def initialize(database, schema)
+    def initialize(database, plan)
       @database = database
-      @schema = schema
+      @plan = plan
     end
 
-    # tables that are part of the database but not part of the schema
+    # tables that are part of the database but not part of the plan
     def missing_tables
-      database_table_names - @schema.table_names.map(&:to_s)
+      database_table_names - @plan.table_names.map(&:to_s)
     end
 
-    # tables that are part of the schema put not part of the database
+    # tables that are part of the plan put not part of the database
     def unknown_tables
-      @schema.table_names.map(&:to_s) - database_table_names
+      @plan.table_names.map(&:to_s) - database_table_names
     end
 
     private
@@ -37,7 +37,7 @@ module DBPurger
     end
 
     def validate_tables
-      @schema.tables.each { |table| validate_table_definition(table) }
+      @plan.tables.each { |table| validate_table_definition(table) }
     end
 
     def validate_table_definition(table)
@@ -58,7 +58,7 @@ module DBPurger
     end
 
     def filter_table_names(table_names)
-      table_names.reject { |table_name| @schema.ignore_table?(table_name) }
+      table_names.reject { |table_name| @plan.ignore_table?(table_name) }
     end
 
     def database_table_names

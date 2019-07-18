@@ -19,22 +19,22 @@ module DBPurger
       @batch_size = DEFAULT_BATCH_SIZE
     end
 
-    def nested_schema(&block)
-      @nested_schema ||= Schema.new
-      SchemaBuilder.new(@nested_schema).build_nested_schema(self, &block) if block
-      @nested_schema
+    def nested_plan(&block)
+      @nested_plan ||= Plan.new
+      PlanBuilder.new(@nested_plan).build_nested_plan(self, &block) if block
+      @nested_plan
     end
 
     def nested_tables?
-      @nested_schema != nil
+      @nested_plan != nil
     end
 
     def tables
-      @nested_schema ? @nested_schema.tables : []
+      @nested_plan ? @nested_plan.tables : []
     end
 
     def foreign_keys
-      @nested_schema ? @nested_schema.tables.map(&:foreign_key).compact : []
+      @nested_plan ? @nested_plan.tables.map(&:foreign_key).compact : []
     end
 
     def fields

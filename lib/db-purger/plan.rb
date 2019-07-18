@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module DBPurger
-  # DBPurger::Schema is used to describe the relationship between tables
-  class Schema
+  # DBPurger::Plan is used to describe the relationship between tables
+  class Plan
     attr_accessor :base_table
 
     attr_reader :parent_tables,

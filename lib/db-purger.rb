@@ -8,9 +8,9 @@ module DBPurger
   autoload :PurgeTable, 'db-purger/purge_table'
   autoload :PurgeTableHelper, 'db-purger/purge_table_helper'
   autoload :PurgeTableScanner, 'db-purger/purge_table_scanner'
-  autoload :Schema, 'db-purger/schema'
-  autoload :SchemaBuilder, 'db-purger/schema_builder'
-  autoload :SchemaValidator, 'db-purger/schema_validator'
+  autoload :Plan, 'db-purger/plan'
+  autoload :PlanBuilder, 'db-purger/plan_builder'
+  autoload :PlanValidator, 'db-purger/plan_validator'
   autoload :Table, 'db-purger/table'
 
   def self.config

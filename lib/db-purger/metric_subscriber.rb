@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module DBPurger
-  # DBPurger::MetricSubscriber tracks the progress of the Schema#purge process
+  # DBPurger::MetricSubscriber tracks the progress of the Plan#purge process
   class MetricSubscriber < ActiveSupport::Subscriber
     def self.metrics
       @metrics ||= Metrics.new
