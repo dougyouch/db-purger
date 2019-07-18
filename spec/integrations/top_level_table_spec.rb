@@ -160,6 +160,7 @@ describe 'top level table' do
       }.to change { TestDB::Event.count }.by(0)
 
       expect(DBPurger::TestSubscriber.tables[:employments][:deleted]).to eq(8)
+      expect(DBPurger::MetricSubscriber.metrics.purge_stats[:employments][:num_records]).to eq(8)
     end
   end
 end
