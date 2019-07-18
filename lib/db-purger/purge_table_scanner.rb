@@ -26,15 +26,49 @@ module DBPurger
 
     private
 
+    # rubocop:disable Metrics/AbcSize
+    # rubocop:disable Metrics/MethodLength
     def purge_in_batches!
       scope = model
       scope = scope.where(@table.conditions) if @table.conditions
+
+      instrumentation_name = 'next_batch.db_purger'
+      start_instrumentation(instrumentation_name)
+
       scope.find_in_batches(batch_size: @table.batch_size) do |batch|
-        unless (batch = @table.search_proc.call(batch)).empty?
-          purge_nested_tables(batch) if @table.nested_tables?
-          delete_records(batch)
-        end
+        records_to_delete = @table.search_proc.call(batch)
+
+        finish_instrumentation(
+          instrumentation_name,
+          table_name: @table.name,
+          num_records: batch.size,
+          num_selected: records_to_delete.size
+        )
+        start_instrumentation(instrumentation_name)
+
+        next if records_to_delete.empty?
+
+        purge_nested_tables(records_to_delete) if @table.nested_tables?
+        delete_records(records_to_delete)
       end
+
+      finish_instrumentation(
+        instrumentation_name,
+        table_name: @table.name,
+        num_records: 0,
+        num_selected: 0
+      )
+    end
+    # rubocop:enable Metrics/AbcSize
+    # rubocop:enable Metrics/MethodLength
+
+    def start_instrumentation(name)
+      @instrumenter = ActiveSupport::Notifications.instrumenter
+      @instrumenter.start(name, {})
+    end
+
+    def finish_instrumentation(name, payload)
+      @instrumenter.finish(name, payload)
     end
   end
 end
