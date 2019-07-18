@@ -28,6 +28,7 @@ module DBPurger
         purge_search_tables
         payload[:deleted] = @num_deleted
       end
+      @num_deleted
     end
 
     private

@@ -118,7 +118,7 @@ describe 'top level table' do
               expect {
                 expect {
                   expect {
-                    subject
+                    expect(subject).to eq(1)
                   }.to change { TestDB::EmploymentNote.count }.by(-15)
                 }.to change { TestDB::Employment.count }.by(-8)
               }.to change { TestDB::User.count }.by(-8)
@@ -149,7 +149,7 @@ describe 'top level table' do
                 expect {
                   expect {
                     expect {
-                      subject
+                      expect(subject).to eq(1)
                     }.to change { TestDB::EmploymentNote.count }.by(0)
                   }.to change { TestDB::Employment.count }.by(0)
                 }.to change { TestDB::User.count }.by(0)
