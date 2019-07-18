@@ -52,20 +52,25 @@ module DBPurger
       end
     end
 
-    # rubocop:disable Metrics/AbcSize
     def next_batch(start_id)
-      scope = model
-              .select([model.primary_key] + @table.foreign_keys)
-              .where(@purge_field => @purge_value)
-              .order(model.primary_key).limit(@table.batch_size)
-      scope = scope.where(@table.conditions) if @table.conditions
-      scope = scope.where("#{model.primary_key} > #{model.connection.quote(start_id)}") if start_id
       ActiveSupport::Notifications.instrument('next_batch.db_purger',
                                               table_name: @table.name) do |payload|
-        records = scope.to_a
+        records = batch_scope(start_id).to_a
         payload[:num_records] = records.size
         records
       end
+    end
+
+    # rubocop:disable Metrics/AbcSize
+    def batch_scope(start_id)
+      scope = model
+              .select([model.primary_key] + @table.foreign_keys)
+              .where(@purge_field => @purge_value)
+              .order(model.primary_key)
+              .limit(@table.batch_size)
+      scope = scope.where(@table.conditions) if @table.conditions
+      scope = scope.where("#{model.primary_key} > #{model.connection.quote(start_id)}") if start_id
+      scope
     end
     # rubocop:enable Metrics/AbcSize
   end
