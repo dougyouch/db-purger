@@ -132,7 +132,7 @@ describe 'top level table' do
   describe 'explains' do
     before(:each) do
       ::DBPurger.config.explain = true
-      ::DBPurger.config.explain_file = File.open('/dev/null', 'wb')
+      ::DBPurger.config.explain_file = StringIO.new
     end
 
     after(:each) do
