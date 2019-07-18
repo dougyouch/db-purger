@@ -35,11 +35,27 @@ module DBPurger
       @schema.ignore_tables << table_name
     end
 
+    def purge_table_search(table_name, field, options = {}, &block)
+      table = create_table(table_name, field, options)
+      table.search_proc = block || raise('no block given for search_proc')
+      if @schema.base_table
+        @schema.base_table.nested_schema.search_tables << table
+      else
+        @schema.search_tables << table
+      end
+      table
+    end
+
     def self.build(&block)
       schema = Schema.new
       helper = new(schema)
       helper.instance_eval(&block)
       schema
+    end
+
+    def build_nested_schema(table, &block)
+      helper = self.class.new(table.nested_schema)
+      helper.instance_eval(&block)
     end
 
     private
@@ -51,11 +67,6 @@ module DBPurger
       table.conditions = options[:conditions]
       build_nested_schema(table, &block) if block
       table
-    end
-
-    def build_nested_schema(table, &block)
-      helper = self.class.new(table.nested_schema)
-      helper.instance_eval(&block)
     end
   end
 end

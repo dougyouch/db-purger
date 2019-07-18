@@ -7,7 +7,8 @@ module DBPurger
 
     attr_accessor :foreign_key,
                   :batch_size,
-                  :conditions
+                  :conditions,
+                  :search_proc
 
     attr_reader :name,
                 :field
@@ -18,8 +19,10 @@ module DBPurger
       @batch_size = DEFAULT_BATCH_SIZE
     end
 
-    def nested_schema
+    def nested_schema(&block)
       @nested_schema ||= Schema.new
+      SchemaBuilder.new(@nested_schema).build_nested_schema(self, &block) if block
+      @nested_schema
     end
 
     def nested_tables?

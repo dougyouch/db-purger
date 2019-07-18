@@ -19,6 +19,16 @@ describe 'top level table' do
       child_table(:websites, :id, foreign_key: :company_website_id)
 
       child_table(:events, :model_id, conditions: {model_type: 'TestDB::Company'})
+
+      purge_table_search(:users, :id, batch_size: 2) do |users|
+        users = users.index_by(&:id)
+        TestDB::Employment.select(:id, :user_id).where('user_id IN(?)', users.keys).each do |record|
+          users.delete(record.user_id)
+        end
+        users.values
+      end.nested_schema do
+        child_table(:events, :model_id, conditions: {model_type: 'TestDB::User'})
+      end
     end
   end
 
@@ -48,6 +58,7 @@ describe 'top level table' do
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
+        create(:event, model: employment.user)
       end
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
@@ -106,13 +117,15 @@ describe 'top level table' do
             expect {
               expect {
                 expect {
-                  subject
-                }.to change { TestDB::EmploymentNote.count }.by(-15)
-              }.to change { TestDB::Employment.count }.by(-8)
+                  expect {
+                    subject
+                  }.to change { TestDB::EmploymentNote.count }.by(-15)
+                }.to change { TestDB::Employment.count }.by(-8)
+              }.to change { TestDB::User.count }.by(-8)
             }.to change { TestDB::Company.count }.by(-1)
           }.to change { TestDB::CompanyTag.count }.by(-3)
         }.to change { TestDB::Tag.count }.by(0)
       }.to change { TestDB::Website.count }.by(-2)
-    }.to change { TestDB::Event.count }.by(-3)
+    }.to change { TestDB::Event.count }.by(-4)
   end
 end
