@@ -3,6 +3,8 @@
 # DBPurger is a tool to delete data from tables based on a initial purge value
 module DBPurger
   autoload :Config, 'db-purger/config'
+  autoload :Metrics, 'db-purger/metrics'
+  autoload :MetricSubscriber, 'db-purger/metric_subscriber'
   autoload :PurgeTable, 'db-purger/purge_table'
   autoload :PurgeTableHelper, 'db-purger/purge_table_helper'
   autoload :PurgeTableScanner, 'db-purger/purge_table_scanner'

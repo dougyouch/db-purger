@@ -18,6 +18,7 @@ module DBPurger
     end
 
     def purge!(database, purge_value)
+      MetricSubscriber.reset!
       PurgeTable.new(database, @base_table, @base_table.field, purge_value).purge!
     end
 

@@ -36,20 +36,29 @@ module DBPurger
       start_instrumentation(instrumentation_name)
 
       scope.find_in_batches(batch_size: @table.batch_size) do |batch|
-        records_to_delete = @table.search_proc.call(batch)
-
         finish_instrumentation(
           instrumentation_name,
           table_name: @table.name,
-          num_records: batch.size,
-          num_selected: records_to_delete.size
+          num_records: batch.size
         )
+
+        batch = ActiveSupport::Notifications.instrument('search_filter.db_purger',
+                                                        table_name: @table.name,
+                                                        num_records: batch.size) do |payload|
+          records_selected = @table.search_proc.call(batch)
+          payload[:num_records_selected] = records_selected.size
+          records_selected
+        end
+
+        if batch.empty?
+          start_instrumentation(instrumentation_name)
+          next
+        end
+
+        purge_nested_tables(batch) if @table.nested_tables?
+        delete_records(batch)
+
         start_instrumentation(instrumentation_name)
-
-        next if records_to_delete.empty?
-
-        purge_nested_tables(records_to_delete) if @table.nested_tables?
-        delete_records(records_to_delete)
       end
 
       finish_instrumentation(
