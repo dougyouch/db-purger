@@ -52,7 +52,14 @@ module DBPurger
       ActiveSupport::Notifications.instrument('delete_records.db_purger',
                                               table_name: @table.name,
                                               num_records: num_records) do |payload|
-        records_deleted = scope.delete_all
+        records_deleted =
+          if ::DBPurger.config.explain?
+            delete_sql = scope.to_sql.sub(/SELECT .*?FROM/, 'DELETE FROM')
+            ::DBPurger.config.explain_file.puts(delete_sql)
+            scope.count
+          else
+            scope.delete_all
+          end
         @num_deleted += records_deleted
         payload[:records_deleted] = records_deleted
         payload[:deleted] = @num_deleted

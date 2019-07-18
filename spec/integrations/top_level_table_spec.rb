@@ -128,4 +128,36 @@ describe 'top level table' do
       }.to change { TestDB::Website.count }.by(-2)
     }.to change { TestDB::Event.count }.by(-4)
   end
+
+  describe 'explains' do
+    before(:each) do
+      ::DBPurger.config.explain = true
+      ::DBPurger.config.explain_file = File.open('/dev/null', 'wb')
+    end
+
+    after(:each) do
+      ::DBPurger.config.explain = false
+      ::DBPurger.config.explain_file = nil
+    end
+
+    it 'explains how it would delete company 1' do
+      expect {
+        expect {
+          expect {
+            expect {
+              expect {
+                expect {
+                  expect {
+                    expect {
+                      subject
+                    }.to change { TestDB::EmploymentNote.count }.by(0)
+                  }.to change { TestDB::Employment.count }.by(0)
+                }.to change { TestDB::User.count }.by(0)
+              }.to change { TestDB::Company.count }.by(0)
+            }.to change { TestDB::CompanyTag.count }.by(0)
+          }.to change { TestDB::Tag.count }.by(0)
+        }.to change { TestDB::Website.count }.by(0)
+      }.to change { TestDB::Event.count }.by(0)
+    end
+  end
 end

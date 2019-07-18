@@ -3,7 +3,7 @@ Naming/FileName:
 Metrics/LineLength:
   Max: 120
 Metrics/MethodLength:
-  Max: 15
+  Max: 20
 AllCops:
   Exclude:
     - 'spec/factories/test_factory.rb'
