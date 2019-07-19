@@ -47,7 +47,8 @@ module DBPurger
     def add_parent_tables(base_table_name, field)
       @database.models.each do |model|
         next if model.table_name == base_table_name.to_s
-        next unless has_column?(model, field)
+        next unless column?(model, field)
+
         child_field = foreign_key_name(model)
         if (child_models = find_child_models(model, child_field)).empty?
           write("parent_table(#{model.table_name.to_sym.inspect}, #{field.to_sym.inspect})")
@@ -80,7 +81,7 @@ module DBPurger
     end
 
     def find_child_models(model, field)
-      model_has_many_associations(model).map(&:klass).select { |m| has_column?(m, field) }
+      model_has_many_associations(model).map(&:klass).select { |m| column?(m, field) }
     end
 
     def model_has_many_associations(model)
@@ -93,7 +94,7 @@ module DBPurger
       model.table_name.singularize + '_id'
     end
 
-    def has_column?(model, field)
+    def column?(model, field)
       model.columns.detect { |c| c.name == field.to_s } != nil
     end
   end

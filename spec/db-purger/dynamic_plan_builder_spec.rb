@@ -11,7 +11,7 @@ describe DBPurger::DynamicPlanBuilder do
     subject { dynamic_plan_builder.build(base_table_name, field) }
 
     it 'creates a purge plan' do
-      puts subject
+      expect(subject.include?('child_table(:employment_notes, :employment_id)')).to eq(true)
     end
   end
 end
