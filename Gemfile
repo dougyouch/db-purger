@@ -13,5 +13,6 @@ group :spec do
   gem 'activerecord'
   gem 'factory_bot'
   gem 'rspec'
+  gem 'simplecov'
   gem 'sqlite3'
 end
