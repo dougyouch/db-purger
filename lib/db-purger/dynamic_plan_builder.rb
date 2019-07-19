@@ -69,12 +69,13 @@ module DBPurger
     end
 
     def add_child_table(model, field)
-      if (child_models = find_child_models(model, field)).empty?
+      child_field = foreign_key_name(model)
+      if (child_models = find_child_models(model, child_field)).empty?
         write("child_table(#{model.table_name.to_sym.inspect}, #{field.to_sym.inspect})")
       else
         write("child_table(#{model.table_name.to_sym.inspect}, #{field.to_sym.inspect}) do")
         @indent_depth += 1
-        add_child_tables(child_models, field)
+        add_child_tables(child_models, child_field)
         @indent_depth -= 1
         write('end')
       end
