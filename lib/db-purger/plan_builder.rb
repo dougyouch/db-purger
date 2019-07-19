@@ -65,6 +65,8 @@ module DBPurger
       table.foreign_key = options[:foreign_key]
       table.batch_size = options[:batch_size]
       table.conditions = options[:conditions]
+      table.mark_deleted_field = options[:mark_deleted_field]
+      table.mark_deleted_value = options[:mark_deleted_value]
       build_nested_plan(table, &block) if block
       table
     end

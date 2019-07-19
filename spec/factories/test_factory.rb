@@ -42,4 +42,18 @@ FactoryBot.define do
     name { 'Event ' + SecureRandom.hex(8) }
     occurred_at { Time.now }
   end
+
+  factory :stats_employment_duration, class: 'TestDB::StatsEmploymentDuration' do
+    employment
+    duration { rand(60..720) }
+  end
+
+  factory :stats_company_employment, class: 'TestDB::StatsCompanyEmployment' do
+    company
+    average_duration { rand(365..720) }
+    num_jobs { rand(5..10_000) }
+    total_employees_lifetime { rand(100..100_000) }
+    num_current_employees { rand(5..10_000) }
+    num_employees_for_current_year { rand(5..10_000) }
+  end
 end

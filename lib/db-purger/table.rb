@@ -8,7 +8,10 @@ module DBPurger
     attr_accessor :foreign_key,
                   :batch_size,
                   :conditions,
-                  :search_proc
+                  :search_proc,
+                  :mark_deleted_field
+
+    attr_writer :mark_deleted_value
 
     attr_reader :name,
                 :field
@@ -39,6 +42,10 @@ module DBPurger
 
     def fields
       [@field] + foreign_keys
+    end
+
+    def mark_deleted_value
+      @mark_deleted_value || true
     end
   end
 end

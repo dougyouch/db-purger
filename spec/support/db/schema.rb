@@ -50,6 +50,7 @@ ActiveRecord::Schema.define(version: 20190712000000) do
   create_table "stats_employment_durations", force: true do |t|
     t.integer "employment_id"
     t.integer "duration"
+    t.boolean "deleted"
   end
 
   create_table "stats_company_employments", force: true do |t|
@@ -59,6 +60,7 @@ ActiveRecord::Schema.define(version: 20190712000000) do
     t.integer "total_employees_lifetime"
     t.integer "num_current_employees"
     t.integer "num_employees_for_current_year"
+    t.datetime "deleted_at"
   end
 
   create_table "tmp_load_data_table", force: true do |t|

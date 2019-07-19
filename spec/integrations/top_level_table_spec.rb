@@ -8,11 +8,14 @@ describe 'top level table' do
       base_table(:companies, :id)
 
       parent_table(:company_tags, :company_id)
+      parent_table(:stats_company_employments, :company_id, mark_deleted_field: :deleted_at, mark_deleted_value: Time.now)
 
       child_table(:employments, :company_id, batch_size: 2) do
         child_table(:employment_notes, :employment_id, batch_size: 1)
 
         child_table(:events, :model_id, conditions: {model_type: 'TestDB::Employment'})
+
+        child_table(:stats_employment_durations, :employment_id, mark_deleted_field: :deleted)
       end
 
       child_table(:websites, :id, foreign_key: :website_id)
@@ -45,9 +48,11 @@ describe 'top level table' do
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
+        create(:stats_employment_duration, employment: employment)
       end
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
+        create(:stats_employment_duration, employment: employment)
       end
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
@@ -59,10 +64,12 @@ describe 'top level table' do
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
         create(:event, model: employment.user)
+        create(:stats_employment_duration, employment: employment)
       end
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
         create(:event, model: employment)
+        create(:stats_employment_duration, employment: employment)
       end
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
@@ -76,6 +83,10 @@ describe 'top level table' do
       create(:company_tag, company: c, tag: tag5)
 
       create(:event, model: c)
+      create(:stats_company_employment, company: c)
+      create(:stats_company_employment, company: c)
+      create(:stats_company_employment, company: c)
+      create(:stats_company_employment, company: c)
     end
   end
   let!(:company2) do
@@ -83,25 +94,31 @@ describe 'top level table' do
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
+        create(:stats_employment_duration, employment: employment)
       end
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
         create(:employment_note, employment: employment)
+        create(:stats_employment_duration, employment: employment)
       end
       create(:employment, company: c).tap do |employment|
         create(:employment_note, employment: employment)
+        create(:stats_employment_duration, employment: employment)
       end
       create(:company_tag, company: c, tag: tag1)
       create(:company_tag, company: c, tag: tag3)
       create(:company_tag, company: c, tag: tag4)
       create(:event, model: c)
       create(:event, model: c)
+      create(:stats_company_employment, company: c)
+      create(:stats_company_employment, company: c)
     end
   end
   let!(:company1_employment2) do
     create(:employment, company: company1).tap do |employment|
       create(:employment_note, employment: employment)
       create(:event, model: employment)
+      create(:stats_employment_duration, employment: employment)
     end
   end
   
@@ -118,7 +135,11 @@ describe 'top level table' do
               expect {
                 expect {
                   expect {
-                    expect(subject).to eq(1)
+                    expect {
+                      expect {
+                        expect(subject).to eq(1)
+                      }.to change { TestDB::StatsEmploymentDuration.count }.by(0)
+                    }.to change { TestDB::StatsCompanyEmployment.count }.by(0)
                   }.to change { TestDB::EmploymentNote.count }.by(-15)
                 }.to change { TestDB::Employment.count }.by(-8)
               }.to change { TestDB::User.count }.by(-8)
@@ -127,6 +148,9 @@ describe 'top level table' do
         }.to change { TestDB::Tag.count }.by(0)
       }.to change { TestDB::Website.count }.by(-2)
     }.to change { TestDB::Event.count }.by(-4)
+
+    expect(TestDB::StatsCompanyEmployment.where(company_id: 1).where('deleted_at IS NOT NULL').count).to eq(4)
+    expect(TestDB::StatsEmploymentDuration.where(deleted: true).count).to eq(5)
   end
 
   describe 'explains' do

@@ -57,6 +57,8 @@ module DBPurger
             delete_sql = scope.to_sql.sub(/SELECT .*?FROM/, 'DELETE FROM')
             ::DBPurger.config.explain_file.puts(delete_sql)
             scope.count
+          elsif @table.mark_deleted_field
+            scope.update_all(@table.mark_deleted_field => @table.mark_deleted_value)
           else
             scope.delete_all
           end
