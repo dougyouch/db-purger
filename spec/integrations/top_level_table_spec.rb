@@ -8,7 +8,7 @@ describe 'top level table' do
       base_table(:companies, :id)
 
       parent_table(:company_tags, :company_id)
-      parent_table(:stats_company_employments, :company_id, mark_deleted_field: :deleted_at, mark_deleted_value: Time.now)
+      parent_table(:stats_company_employments, :company_id, mark_deleted_field: :deleted_at, mark_deleted_value: Time.now, batch_size: 2)
 
       child_table(:employments, :company_id, batch_size: 2) do
         child_table(:employment_notes, :employment_id, batch_size: 1)

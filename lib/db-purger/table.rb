@@ -45,7 +45,7 @@ module DBPurger
     end
 
     def mark_deleted_value
-      @mark_deleted_value || true
+      @mark_deleted_value || 1
     end
   end
 end

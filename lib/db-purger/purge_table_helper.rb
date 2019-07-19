@@ -54,9 +54,7 @@ module DBPurger
                                               num_records: num_records) do |payload|
         records_deleted =
           if ::DBPurger.config.explain?
-            delete_sql = scope.to_sql.sub(/SELECT .*?FROM/, 'DELETE FROM')
-            ::DBPurger.config.explain_file.puts(delete_sql)
-            scope.count
+            explain(scope)
           elsif @table.mark_deleted_field
             scope.update_all(@table.mark_deleted_field => @table.mark_deleted_value)
           else
@@ -66,6 +64,37 @@ module DBPurger
         payload[:records_deleted] = records_deleted
         payload[:deleted] = @num_deleted
       end
+    end
+
+    def explain(scope)
+      sql =
+        if @table.mark_deleted_field
+          explain_update_sql(scope)
+        else
+          scope.to_sql.sub(/SELECT .*?FROM/, 'DELETE FROM')
+        end
+      ::DBPurger.config.explain_file.puts(sql)
+      scope.count
+    end
+
+    def explain_update_sql(scope)
+      sql = scope.to_sql.dup
+      sql.sub!(/SELECT .*?FROM/, 'UPDATE')
+      sql.sub!('WHERE', "SET #{mark_deleted_field_quoted} = #{mark_deleted_value_quoted} WHERE")
+      sql
+    end
+
+    def mark_deleted_field_quoted
+      @mark_deleted_field_quoted ||= model.connection.quote_column_name(@table.mark_deleted_field)
+    end
+
+    def mark_deleted_value_quoted
+      @mark_deleted_value_quoted ||=
+        if @table.mark_deleted_value.is_a?(Time)
+          model.connection.quote(@table.mark_deleted_value.strftime(::DBPurger.config.datetime_format))
+        else
+          model.connection.quote(@table.mark_deleted_value)
+        end
     end
 
     def delete_records(batch)
