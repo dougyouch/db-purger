@@ -2,7 +2,8 @@
 
 Gem::Specification.new do |s|
   s.name        = 'db-purger'
-  s.version     = '0.1.2'
+  s.version     = '0.1.3'
+  s.licenses    = ['MIT']
   s.summary     = 'DB Purger by top level id'
   s.description = 'Purge database tables by top level id in batches'
   s.authors     = ['Doug Youch']
