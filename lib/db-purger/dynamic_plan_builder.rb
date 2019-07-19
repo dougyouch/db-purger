@@ -13,9 +13,11 @@ module DBPurger
       @indent_depth = 0
       write('DBPurger::PlanBuilder.build do')
       @indent_depth += 1
+      @tables = []
     end
 
     def build(base_table_name, field)
+      @tables << base_table_name.to_s
       write("base_table(#{base_table_name.to_sym.inspect}, #{field.to_sym.inspect})")
       line_break
       model = find_model_for_table(base_table_name)
@@ -25,6 +27,7 @@ module DBPurger
         line_break
         add_child_tables(child_models, foreign_key, 0)
       end
+      ignore_missing_tables
       @indent_depth -= 1
       write('end')
       @output
@@ -86,12 +89,24 @@ module DBPurger
     end
 
     def write_table(table_type, table_name, field, child_models, foreign_key)
+      @tables << table_name
       if child_models.empty?
         write("#{table_type}_table(#{table_name.to_sym.inspect}, #{field.to_sym.inspect})")
       else
         write("#{table_type}_table(#{table_name.to_sym.inspect}, #{field.to_sym.inspect}) do")
         add_child_tables(child_models, foreign_key)
         write('end')
+      end
+    end
+
+    def ignore_missing_tables
+      missing_tables = @database.models.map(&:table_name) - @tables
+      puts missing_tables.inspect
+      unless missing_tables.empty?
+        line_break
+        missing_tables.each do |table_name|
+          write("ignore_table #{table_name.to_sym.inspect}")
+        end
       end
     end
   end

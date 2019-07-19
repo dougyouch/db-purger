@@ -26,6 +26,12 @@ DBPurger::PlanBuilder.build do
   end
   child_table(:company_tags, :company_id)
   child_table(:stats_company_employments, :company_id)
+
+  ignore_table :users
+  ignore_table :jobs
+  ignore_table :websites
+  ignore_table :tags
+  ignore_table :events
 end
 STR
     end
