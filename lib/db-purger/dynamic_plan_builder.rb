@@ -11,12 +11,12 @@ module DBPurger
       @database = database
       @output = ''.dup
       @indent_depth = 0
-      write('DBPurger::PlanBuilder.build do')
-      @indent_depth += 1
       @tables = []
     end
 
     def build(base_table_name, field)
+      write('DBPurger::PlanBuilder.build do')
+      @indent_depth += 1
       write_table('base', base_table_name.to_s, field, [], nil)
       line_break
       model = find_model_for_table(base_table_name)
