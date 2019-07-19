@@ -17,8 +17,7 @@ module DBPurger
     end
 
     def build(base_table_name, field)
-      @tables << base_table_name.to_s
-      write("base_table(#{base_table_name.to_sym.inspect}, #{field.to_sym.inspect})")
+      write_table('base', base_table_name.to_s, field, [], nil)
       line_break
       model = find_model_for_table(base_table_name)
       foreign_key = foreign_key_name(model)
@@ -101,12 +100,11 @@ module DBPurger
 
     def ignore_missing_tables
       missing_tables = @database.models.map(&:table_name) - @tables
-      puts missing_tables.inspect
-      unless missing_tables.empty?
-        line_break
-        missing_tables.each do |table_name|
-          write("ignore_table #{table_name.to_sym.inspect}")
-        end
+      return if missing_tables.empty?
+
+      line_break
+      missing_tables.each do |table_name|
+        write("ignore_table #{table_name.to_sym.inspect}")
       end
     end
   end
