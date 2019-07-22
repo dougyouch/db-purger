@@ -4,6 +4,7 @@
 module DBPurger
   autoload :Config, 'db-purger/config'
   autoload :DynamicPlanBuilder, 'db-purger/dynamic_plan_builder'
+  autoload :Executor, 'db-purger/executor'
   autoload :Metrics, 'db-purger/metrics'
   autoload :MetricSubscriber, 'db-purger/metric_subscriber'
   autoload :PurgeTable, 'db-purger/purge_table'

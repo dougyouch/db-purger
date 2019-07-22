@@ -12,3 +12,4 @@ AllCops:
     - 'spec/support/db/schema.rb'
     - 'spec/support/test_db.rb'
     - 'spec/**/*_spec.rb'
+    - 'spec/**/*.plan.rb'
