@@ -58,6 +58,11 @@ module DBPurger
       helper.instance_eval(&block)
     end
 
+    def load_plan_file(file)
+      instance_eval(File.read(file))
+      @plan
+    end
+
     private
 
     def create_table(table_name, field, options, &block)

@@ -37,11 +37,11 @@ module DBPurger
       ::DBPurger.config.datetime_format = options[:datetime_format]
     end
 
-    # rubocop:disable Security/Eval
     def load_plan(file)
-      eval(File.read(file))
+      PlanBuilder
+        .new(Plan.new)
+        .load_plan_file(file)
     end
-    # rubocop:enable Security/Eval
 
     def output_plan_errors
       plan_validator.errors.each do |field, error_msg|
