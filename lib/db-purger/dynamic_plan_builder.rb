@@ -15,8 +15,6 @@ module DBPurger
     end
 
     def build(base_table_name, field)
-      write('DBPurger::PlanBuilder.build do')
-      @indent_depth += 1
       write_table('base', base_table_name.to_s, field, [], nil)
       line_break
       model = find_model_for_table(base_table_name)
@@ -27,8 +25,6 @@ module DBPurger
         add_child_tables(child_models, foreign_key, 0)
       end
       ignore_missing_tables
-      @indent_depth -= 1
-      write('end')
       @output
     end
 
