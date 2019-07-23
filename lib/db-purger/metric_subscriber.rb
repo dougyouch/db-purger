@@ -11,6 +11,10 @@ module DBPurger
       metrics.reset!
     end
 
+    def self.auto_attach
+      attach_to :db_purger
+    end
+
     def purge(event)
       self.class.metrics.update_purge_stats(
         event.payload[:table_name],
