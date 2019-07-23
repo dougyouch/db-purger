@@ -64,5 +64,17 @@ module DBPurger
       stats[:records_selected] += records_selected
       stats
     end
+
+    def as_json(_opts = {})
+      {
+        took: elapsed_time_in_seconds,
+        started_at: @started_at,
+        finished_at: @finished_at,
+        purge_stats: @purge_stats,
+        delete_stats: @delete_stats,
+        lookup_stats: @lookup_stats,
+        filter_stats: @filter_stats
+      }
+    end
   end
 end
