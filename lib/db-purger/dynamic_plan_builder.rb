@@ -14,19 +14,25 @@ module DBPurger
       @tables = []
     end
 
+    # rubocop:disable Metrics/AbcSize
     def build(base_table_name, field)
       write_table('base', base_table_name.to_s, field, [], nil)
       line_break
       model = find_model_for_table(base_table_name)
       foreign_key = foreign_key_name(model)
-      add_parent_tables(base_table_name, field) unless field == :id
-      unless (child_models = find_child_models(model, foreign_key)).empty?
-        line_break unless field == :id
-        add_child_tables(child_models, foreign_key, 0)
+      if model.primary_key == field.to_s
+        add_parent_tables(base_table_name, foreign_key)
+      else
+        add_parent_tables(base_table_name, field)
+        unless (child_models = find_child_models(model, foreign_key)).empty?
+          line_break unless field == :id
+          add_child_tables(child_models, foreign_key, 0)
+        end
       end
       ignore_missing_tables
       @output
     end
+    # rubocop:enable Metrics/AbcSize
 
     private
 
