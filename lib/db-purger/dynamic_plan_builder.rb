@@ -19,9 +19,9 @@ module DBPurger
       line_break
       model = find_model_for_table(base_table_name)
       foreign_key = foreign_key_name(model)
-      add_parent_tables(base_table_name, foreign_key)
+      add_parent_tables(base_table_name, field) unless field == :id
       unless (child_models = find_child_models(model, foreign_key)).empty?
-        line_break
+        line_break unless field == :id
         add_child_tables(child_models, foreign_key, 0)
       end
       ignore_missing_tables

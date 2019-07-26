@@ -12,13 +12,6 @@ describe DBPurger::DynamicPlanBuilder do
 <<-STR
 base_table(:companies, :id)
 
-parent_table(:employments, :company_id) do
-  child_table(:employment_notes, :employment_id)
-  child_table(:stats_employment_durations, :employment_id)
-end
-parent_table(:company_tags, :company_id)
-parent_table(:stats_company_employments, :company_id)
-
 child_table(:employments, :company_id) do
   child_table(:employment_notes, :employment_id)
   child_table(:stats_employment_durations, :employment_id)
