@@ -73,7 +73,7 @@ module DBPurger
         else
           scope.to_sql.sub(/SELECT .*?FROM/, 'DELETE FROM')
         end
-      ::DBPurger.config.explain_file.puts(sql)
+      ::DBPurger.config.explain_file.puts(sql + ';')
       scope.count
     end
 
