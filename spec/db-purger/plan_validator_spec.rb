@@ -26,6 +26,7 @@ describe DBPurger::PlanValidator do
         ignore_table :users
         ignore_table :jobs
         ignore_table /web/
+        ignore_table :contents
         ignore_table :tags
       end
     end
@@ -52,6 +53,7 @@ describe DBPurger::PlanValidator do
           ignore_table :users
           ignore_table :jobs
           ignore_table :websites
+          ignore_table :contents
         end
       end
 
@@ -82,6 +84,7 @@ describe DBPurger::PlanValidator do
           ignore_table :users
           ignore_table :jobs
           ignore_table :websites
+          ignore_table :contents
           ignore_table :tags
         end
       end
@@ -112,6 +115,7 @@ describe DBPurger::PlanValidator do
           ignore_table :users
           ignore_table :jobs
           ignore_table :websites
+          ignore_table :contents
           ignore_table :tags
         end
       end

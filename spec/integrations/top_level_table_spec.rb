@@ -18,8 +18,12 @@ describe 'top level table' do
         child_table(:stats_employment_durations, :employment_id, mark_deleted_field: :deleted)
       end
 
-      child_table(:websites, :id, foreign_key: :website_id)
-      child_table(:websites, :id, foreign_key: :company_website_id)
+      child_table(:websites, :id, foreign_key: :website_id) do
+        child_table(:contents, :id, foreign_key: :content_id)
+      end
+      child_table(:websites, :id, foreign_key: :company_website_id) do
+        child_table(:contents, :id, foreign_key: :content_id)
+      end
 
       child_table(:events, :model_id, conditions: {model_type: 'TestDB::Company'})
 

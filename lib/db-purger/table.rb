@@ -37,7 +37,7 @@ module DBPurger
     end
 
     def foreign_keys
-      @nested_plan ? @nested_plan.tables.map(&:foreign_key).compact : []
+      @nested_plan ? @nested_plan.foreign_tables.map(&:foreign_key).compact : []
     end
 
     def fields

@@ -13,8 +13,12 @@ child_table(:events, :model_id, conditions: {model_type: 'Company'}) do
   child_table(:event_handlers, :event_id)
 end
 
-child_table(:websites, :id, foreign_key: :website_id)
-child_table(:websites, :id, foreign_key: :company_website_id)
+child_table(:websites, :id, foreign_key: :website_id) do
+  child_table(:contents, :id, foreign_key: :content_id)
+end
+child_table(:websites, :id, foreign_key: :company_website_id) do
+  child_table(:contents, :id, foreign_key: :content_id)
+end
 
 purge_table_search(:users, :id) do |users|
   users = users.index_by(&:id)

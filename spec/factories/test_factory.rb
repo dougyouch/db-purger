@@ -13,8 +13,14 @@ FactoryBot.define do
     title { 'Job ' + SecureRandom.hex(8) }
   end
 
+  factory :content, class: 'TestDB::Content' do
+    title { 'Cotnent ' + SecureRandom.hex(8) }
+    body { 'Content Body ' + SecureRandom.hex(8) }
+  end
+
   factory :website, class: 'TestDB::Website' do
     url { 'https://' + SecureRandom.hex(8) + '.example.com' }
+    content
   end
 
   factory :employment, class: 'TestDB::Employment' do

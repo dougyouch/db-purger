@@ -22,6 +22,7 @@ parent_table(:stats_company_employments, :company_id)
 ignore_table :users
 ignore_table :jobs
 ignore_table :websites
+ignore_table :contents
 ignore_table :tags
 ignore_table :events
 STR
@@ -49,6 +50,7 @@ ignore_table :users
 ignore_table :companies
 ignore_table :jobs
 ignore_table :websites
+ignore_table :contents
 ignore_table :tags
 ignore_table :events
 STR

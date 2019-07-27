@@ -16,6 +16,12 @@ ActiveRecord::Schema.define(version: 20190712000000) do
 
   create_table "websites", force: true do |t|
     t.string "url"
+    t.integer "content_id"
+  end
+
+  create_table "contents", force: true do |t|
+    t.string "title"
+    t.string "body"
   end
 
   create_table "employments", force: true do |t|

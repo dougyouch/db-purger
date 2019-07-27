@@ -32,6 +32,13 @@ module DBPurger
       all_tables
     end
 
+    def foreign_tables
+      (@base_table ? [@base_table] : []) +
+        @parent_tables +
+        @child_tables +
+        @search_tables
+    end
+
     def table_names
       tables.map(&:name)
     end
