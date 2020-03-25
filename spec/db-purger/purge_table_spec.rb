@@ -9,6 +9,8 @@ describe DBPurger::PurgeTable do
       child_table(:employments, :company_id, batch_size: 2) do
         child_table(:employment_notes, :employment_id, batch_size: 1)
       end
+
+      parent_table(:company_tags, :company_id)
     end
   end
 
@@ -24,8 +26,8 @@ describe DBPurger::PurgeTable do
     subject { purge_table.purge! }
 
     describe 'simple deletion' do
-      let(:company1) { create :company, id: purge_value }
-      let(:company2) { create :company }
+      let(:company1) { create :company, id: 1 }
+      let(:company2) { create :company, id: 2 }
 
       before(:each) do
         company1
@@ -46,7 +48,7 @@ describe DBPurger::PurgeTable do
     describe 'nested deletion' do
       subject { plan.purge!(DYNAMIC_DATABASE, purge_value) }
       let(:company1) do
-        create(:company, id: purge_value).tap do |c|
+        create(:company, id: 1).tap do |c|
           create(:employment, company: c).tap do |employment|
             create(:employment_note, employment: employment)
             create(:employment_note, employment: employment)
@@ -78,7 +80,7 @@ describe DBPurger::PurgeTable do
         end
       end
       let(:company2) do
-        create(:company).tap do |c|
+        create(:company, id: 2).tap do |c|
           create(:employment, company: c).tap do |employment|
             create(:employment_note, employment: employment)
             create(:employment_note, employment: employment)
@@ -92,10 +94,18 @@ describe DBPurger::PurgeTable do
           end
         end
       end
+      let(:company3) do |c|
+        create(:company, id: 3).tap do |c|
+          create(:company_tag, company: c)
+          create(:company_tag, company: c)
+          create(:company_tag, company: c)
+        end
+      end
 
       before(:each) do
         company1
         company2
+        company3.delete
       end
 
       after(:each) do
@@ -110,6 +120,18 @@ describe DBPurger::PurgeTable do
             }.to change { TestDB::EmploymentNote.count }.by(-14)
           }.to change { TestDB::Employment.count }.by(-7)
         }.to change { TestDB::Company.count }.by(-1)
+      end
+
+      describe 'parent_table' do
+        let(:purge_value) { 3 }
+
+        it 'removes data from parent tables' do
+          expect {
+            expect {
+              subject
+            }.to change { TestDB::CompanyTag.count }.by(-3)
+          }.to change { TestDB::Company.count }.by(0)
+        end
       end
     end
   end
