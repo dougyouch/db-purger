@@ -11,7 +11,6 @@ module DBPurger
 
     def purge_nested_tables(batch)
       purge_child_tables(batch) unless @table.nested_plan.child_tables.empty?
-      purge_parent_tables
     end
 
     def purge_child_tables(batch)

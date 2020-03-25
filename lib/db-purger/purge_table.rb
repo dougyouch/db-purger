@@ -47,6 +47,7 @@ module DBPurger
         purge_nested_tables(batch) if @table.nested_tables?
         delete_records(batch)
       end
+      purge_parent_tables
     end
 
     def next_batch(start_id)
