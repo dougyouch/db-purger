@@ -11,6 +11,10 @@ module DBPurger
       metrics.reset!
     end
 
+    def self.finished!
+      metrics.finished!
+    end
+
     def self.auto_attach
       attach_to :db_purger
     end

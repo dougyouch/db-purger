@@ -19,7 +19,9 @@ module DBPurger
 
     def purge!(database, purge_value)
       MetricSubscriber.reset!
-      PurgeTable.new(database, @base_table, @base_table.field, purge_value).purge!
+      num_deleted = PurgeTable.new(database, @base_table, @base_table.field, purge_value).purge!
+      MetricSubscriber.finished!
+      num_deleted
     end
 
     def tables
