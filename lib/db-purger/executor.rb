@@ -44,8 +44,8 @@ module DBPurger
     end
 
     def output_plan_errors
-      plan_validator.errors.each do |field, error_msg|
-        @error_io.puts "#{field}: #{error_msg}"
+      plan_validator.errors.each do |error|
+        @error_io.puts "#{error.attribute}: #{error.type}"
       end
     end
   end
