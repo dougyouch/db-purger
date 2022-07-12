@@ -1,28 +1,28 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    activemodel (7.0.2.3)
-      activesupport (= 7.0.2.3)
-    activerecord (7.0.2.3)
-      activemodel (= 7.0.2.3)
-      activesupport (= 7.0.2.3)
-    activesupport (7.0.2.3)
+    activemodel (7.0.3.1)
+      activesupport (= 7.0.3.1)
+    activerecord (7.0.3.1)
+      activemodel (= 7.0.3.1)
+      activesupport (= 7.0.3.1)
+    activesupport (7.0.3.1)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
       tzinfo (~> 2.0)
     ast (2.4.2)
-    concurrent-ruby (1.1.9)
+    concurrent-ruby (1.1.10)
     diff-lcs (1.5.0)
     docile (1.4.0)
     dynamic-active-model (0.4.1)
       activerecord
     factory_bot (6.2.1)
       activesupport (>= 5.0.0)
-    i18n (1.10.0)
+    i18n (1.11.0)
       concurrent-ruby (~> 1.0)
     inheritance-helper (0.2.5)
-    minitest (5.15.0)
+    minitest (5.16.2)
     parallel (1.21.0)
     parser (3.1.1.0)
       ast (~> 2.4.1)
@@ -67,6 +67,7 @@ GEM
 
 PLATFORMS
   x86_64-darwin-21
+  x86_64-linux
 
 DEPENDENCIES
   activerecord
