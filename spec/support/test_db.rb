@@ -29,10 +29,6 @@ DynamicActiveModel::Associations.new(DYNAMIC_DATABASE).tap do |assoc|
   assoc.build!
 end
 
-def reset_test_database
-  FileUtils.cp(DB_FILE_BAK, DB_FILE)
-end
-
 class TestDB::Company
   self.ignored_columns += ['hash']
 end

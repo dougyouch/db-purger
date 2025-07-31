@@ -75,10 +75,6 @@ describe 'nested table' do
       create(:employment_note, employment: employment)
     end
   end
-  
-  after(:each) do
-    reset_test_database
-  end
 
   it 'purges company 1 and associated data' do
     expect {

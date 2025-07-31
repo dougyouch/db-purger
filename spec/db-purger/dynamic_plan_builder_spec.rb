@@ -12,19 +12,19 @@ describe DBPurger::DynamicPlanBuilder do
 <<-STR
 base_table(:companies, :id)
 
+parent_table(:stats_company_employments, :company_id)
+parent_table(:company_tags, :company_id)
 parent_table(:employments, :company_id) do
   child_table(:employment_notes, :employment_id)
   child_table(:stats_employment_durations, :employment_id)
 end
-parent_table(:company_tags, :company_id)
-parent_table(:stats_company_employments, :company_id)
 
-ignore_table :users
-ignore_table :jobs
-ignore_table :websites
-ignore_table :contents
-ignore_table :tags
 ignore_table :events
+ignore_table :tags
+ignore_table :contents
+ignore_table :websites
+ignore_table :jobs
+ignore_table :users
 STR
     end
     subject { dynamic_plan_builder.build(base_table_name, field) }
@@ -40,19 +40,19 @@ STR
 <<-STR
 base_table(:employments, :company_id)
 
-parent_table(:company_tags, :company_id)
 parent_table(:stats_company_employments, :company_id)
+parent_table(:company_tags, :company_id)
 
 child_table(:employment_notes, :employment_id)
 child_table(:stats_employment_durations, :employment_id)
 
+ignore_table :events
+ignore_table :tags
+ignore_table :contents
+ignore_table :websites
+ignore_table :jobs
 ignore_table :users
 ignore_table :companies
-ignore_table :jobs
-ignore_table :websites
-ignore_table :contents
-ignore_table :tags
-ignore_table :events
 STR
       end
 

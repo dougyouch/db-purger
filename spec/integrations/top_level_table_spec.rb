@@ -126,10 +126,6 @@ describe 'top level table' do
       create(:stats_employment_duration, employment: employment)
     end
   end
-  
-  after(:each) do
-    reset_test_database
-  end
 
   it 'purges company 1 and associated data' do
     expect {

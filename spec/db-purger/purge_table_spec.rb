@@ -34,10 +34,6 @@ describe DBPurger::PurgeTable do
         company2
       end
 
-      after(:each) do
-        reset_test_database
-      end
-
       it 'purges company 1' do
         expect {
           subject
@@ -106,10 +102,6 @@ describe DBPurger::PurgeTable do
         company1
         company2
         company3.delete
-      end
-
-      after(:each) do
-        reset_test_database
       end
 
       it 'purges company 1 and associated data' do

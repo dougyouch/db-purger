@@ -54,6 +54,18 @@ DBPurger::MetricSubscriber.auto_attach
 # ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 require 'factories/test_factory'
+require 'database_cleaner'
 RSpec.configure do |config|
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :truncation
+    DatabaseCleaner.clean_with(:truncation)
+  end
+
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      example.run
+    end
+  end
+
   config.include FactoryBot::Syntax::Methods
 end

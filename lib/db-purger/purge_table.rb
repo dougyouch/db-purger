@@ -21,6 +21,7 @@ module DBPurger
       ActiveSupport::Notifications.instrument('purge.db_purger',
                                               table_name: @table.name,
                                               purge_field: @purge_field) do |payload|
+        payload[:deleted] = @num_deleted
         if model.primary_key
           purge_in_batches!
         else
