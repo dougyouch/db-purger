@@ -1,5 +1,9 @@
 # db-purger
 
+[![CI](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
+[![Coverage](https://raw.githubusercontent.com/dougyouch/db-purger/badges/coverage.svg)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
+[![Gem Version](https://img.shields.io/gem/v/db-purger)](https://rubygems.org/gems/db-purger)
+
 Purge every row tied to a single top-level record — a company, an account, a tenant — across all of the
 tables that reference it, in batches, from a declarative Ruby plan.
 
@@ -248,7 +252,19 @@ bundle exec rubocop
 script/console
 ```
 
+CI (`.github/workflows/ci.yml`) runs RuboCop and the specs on Ruby 3.2–4.0 for every push and pull request.
+The HTML coverage report is attached to each run as the `coverage` artifact, and pushes to `master` refresh
+the coverage badge on the `badges` branch.
+
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together.
+
+## Releasing
+
+1. Bump `s.version` in `db-purger.gemspec` and merge to `master`.
+2. Tag and push: `git tag v0.5.0 && git push origin v0.5.0`
+
+`.github/workflows/release.yml` re-runs CI, checks the tag matches the gemspec version, publishes to RubyGems
+via trusted publishing (no API key), and creates a GitHub release with the `.gem` attached.
 
 ## License
 
