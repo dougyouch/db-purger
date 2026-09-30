@@ -19,7 +19,7 @@ tables and blow out replication.
 db-purger lets you describe those relationships once, in a plan file, and then:
 
 - deletes in **primary-key batches** (default 10,000) so no single statement gets too large
-- deletes **children before parents**, so foreign-key constraints are never violated
+- deletes rows **only after the rows that reference them**, so foreign-key constraints hold without `ON DELETE CASCADE`
 - **validates** the plan against the live schema, so a newly added table can't be silently forgotten
 - supports **soft deletes** (`UPDATE ... SET deleted_at = ...`) per table
 - has an **explain mode** that prints the SQL it would run instead of running it
@@ -117,7 +117,7 @@ deleted = executor.purge!(42)
 | `base_table(table, field, opts = {}, &block)` | The root of the purge. Rows where `field = purge_value` are purged. Declare it **first** — every subsequent top-level call nests under it. |
 | `child_table(table, field, opts = {}, &block)` | Rows whose `field` matches the **primary key** of the enclosing table's current batch. Purged before that batch is deleted. |
 | `child_table(table, :id, foreign_key: :col, &block)` | Inverted relationship: the *enclosing* table holds `col` pointing at this table's `id`. Deleted in the same transaction, right after the enclosing batch. |
-| `parent_table(table, field, opts = {}, &block)` | Rows whose `field` matches the original **purge value**. Purged after all of the enclosing table's batches. Use for sibling tables that share the same key (e.g. `company_id`). |
+| `parent_table(table, field, opts = {}, &block)` | Rows whose `field` matches the original **purge value**. Purged after the enclosing table's child tables but before the enclosing table's own rows, so it may both reference the base (`company_tags.company_id → companies.id`) and be referenced by a child table. Use for sibling tables that share the same key (e.g. `company_id`). |
 | `purge_table_search(table, field, opts = {}) { \|batch\| ... }` | Scans the whole table in batches; the block receives each batch and returns the records to purge. For orphans that can't be reached by a key. |
 | `ignore_table(name_or_regexp)` | Exclude a table from validation. |
 
@@ -176,7 +176,9 @@ puts DBPurger::DynamicPlanBuilder.new(database).build(:companies, :id)
 
 - every table in the database is either in the plan or ignored (`missing_tables`)
 - every table in the plan exists in the database (`unknown_tables`)
-- every field and `foreign_key` named in the plan is a real column
+- every field, `foreign_key` and `mark_deleted_field` named in the plan is a real column
+- the plan has a `base_table`, and every `batch_size` is positive
+- tables without a primary key have no nested child or parent tables (there would be no ids to propagate)
 
 Run it in CI against your schema so a new table can't ship without a purge decision.
 
@@ -198,7 +200,9 @@ against the database, so the output reflects real row ids.
 | `explain_file:` | `$stdout` |
 | `datetime_format:` | `'%Y-%m-%d %H:%M:%S'` |
 
-Note that these are stored in the global `DBPurger.config`, and every `Executor.new` resets them.
+Each executor keeps its own settings and applies them only for the duration of its `purge!` (per thread), so
+creating another executor can't turn a dry run into a live one. `explain:` must be `true`, `false` or `nil`;
+anything else (such as the string `'true'`) raises `ArgumentError` rather than running for real.
 
 ## Metrics and instrumentation
 

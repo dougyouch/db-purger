@@ -14,7 +14,6 @@ module DBPurger
       @tables = []
     end
 
-    # rubocop:disable Metrics/AbcSize
     def build(base_table_name, field)
       write_table('base', base_table_name.to_s, field, [], nil)
       line_break
@@ -32,7 +31,6 @@ module DBPurger
       ignore_missing_tables
       @output
     end
-    # rubocop:enable Metrics/AbcSize
 
     private
 
@@ -41,7 +39,7 @@ module DBPurger
     end
 
     def write(str)
-      @output << (INDENT * @indent_depth) + str + "\n"
+      @output << "#{INDENT * @indent_depth}#{str}\n"
     end
 
     def line_break
@@ -82,7 +80,7 @@ module DBPurger
     end
 
     def foreign_key_name(model)
-      model.table_name.singularize + '_id'
+      "#{model.table_name.singularize}_id"
     end
 
     def column?(model, field)

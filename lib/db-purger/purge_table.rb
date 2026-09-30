@@ -25,6 +25,7 @@ module DBPurger
         if model.primary_key
           purge_in_batches!
         else
+          ensure_no_nested_key_tables!
           purge_all!
         end
         purge_search_tables
@@ -35,6 +36,13 @@ module DBPurger
 
     private
 
+    # without a primary key there are no batch ids to propagate, so nested tables would be silently skipped
+    def ensure_no_nested_key_tables!
+      return unless @table.nested_key_tables?
+
+      raise("#{@table.name} has no primary key and cannot have nested child or parent tables")
+    end
+
     def purge_all!
       scope = model.where(@purge_field => @purge_value)
       scope = scope.where(@table.conditions) if @table.conditions
@@ -42,13 +50,27 @@ module DBPurger
     end
 
     def purge_in_batches!
+      unless @table.parent_tables?
+        each_batch do |batch|
+          purge_nested_tables(batch) if @table.nested_tables?
+          delete_records(batch)
+        end
+        return
+      end
+
+      # Parent tables may reference this table's rows and be referenced by its child tables,
+      # so purge them after the children but before this table's rows.
+      each_batch { |batch| purge_nested_tables(batch) }
+      purge_parent_tables
+      each_batch { |batch| delete_records(batch) }
+    end
+
+    def each_batch
       start_id = nil
       until (batch = next_batch(start_id)).empty?
-        start_id = batch.last.send(model.primary_key)
-        purge_nested_tables(batch) if @table.nested_tables?
-        delete_records(batch)
+        start_id = batch.last[model.primary_key]
+        yield batch
       end
-      purge_parent_tables
     end
 
     def next_batch(start_id)

@@ -52,3 +52,4 @@ pkg
 
 *.db
 *.bak
+spec/fk_test.db*

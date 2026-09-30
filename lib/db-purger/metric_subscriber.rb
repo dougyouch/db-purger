@@ -23,7 +23,7 @@ module DBPurger
       self.class.metrics.update_purge_stats(
         event.payload[:table_name],
         event.duration,
-        event.payload[:deleted]
+        event.payload[:deleted] || 0
       )
     end
 
@@ -31,7 +31,7 @@ module DBPurger
       self.class.metrics.update_delete_records_stats(
         event.payload[:table_name],
         event.duration,
-        event.payload[:records_deleted],
+        event.payload[:records_deleted] || 0,
         event.payload[:num_records]
       )
     end
@@ -40,7 +40,7 @@ module DBPurger
       self.class.metrics.update_lookup_stats(
         event.payload[:table_name],
         event.duration,
-        event.payload[:num_records]
+        event.payload[:num_records] || 0
       )
     end
 
@@ -48,8 +48,8 @@ module DBPurger
       self.class.metrics.update_search_filter_stats(
         event.payload[:table_name],
         event.duration,
-        event.payload[:num_records],
-        event.payload[:num_records_selected]
+        event.payload[:num_records] || 0,
+        event.payload[:num_records_selected] || 0
       )
     end
   end

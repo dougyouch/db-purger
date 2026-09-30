@@ -18,6 +18,8 @@ module DBPurger
     end
 
     def purge!(database, purge_value)
+      raise('plan has no base_table') unless @base_table
+
       MetricSubscriber.reset!
       num_deleted = PurgeTable.new(database, @base_table, @base_table.field, purge_value).purge!
       MetricSubscriber.finished!
