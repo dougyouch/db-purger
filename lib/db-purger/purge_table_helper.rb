@@ -38,8 +38,9 @@ module DBPurger
       end
     end
 
+    # record[] reads the column; send would call a same-named method instead (e.g. a column called "reload")
     def batch_values(batch, field)
-      batch.map { |record| record.send(field) }.compact
+      batch.map { |record| record[field] }.compact
     end
 
     def foreign_tables?
@@ -72,7 +73,7 @@ module DBPurger
         else
           scope.to_sql.sub(/SELECT .*?FROM/, 'DELETE FROM')
         end
-      ::DBPurger.config.explain_file.puts(sql + ';')
+      ::DBPurger.config.explain_file.puts("#{sql};")
       scope.count
     end
 

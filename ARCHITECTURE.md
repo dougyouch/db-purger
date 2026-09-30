@@ -65,16 +65,17 @@ a table's direct children so the purger can `SELECT` them alongside the primary 
 `PurgeTable#purge!` does:
 
 ```
-if table has a primary key:
-  loop:
+each_batch = loop:
     batch = SELECT pk, <child foreign_keys> FROM t
             WHERE field IN (values) [AND conditions] [AND pk > last_pk]
             ORDER BY pk LIMIT batch_size
     break if batch empty
 
+purge_children(batch) =
     for each child_table without foreign_key:      # rows pointing at us
       PurgeTable(child, child.field, batch.pks).purge!    (recursive)
 
+delete_rows(batch) =
     if any child has foreign_key:                  # rows we point at
       TRANSACTION
         delete batch by pk
@@ -82,9 +83,16 @@ if table has a primary key:
     else
       delete batch by pk
 
-  for each parent_table:                           # siblings sharing the key
-    PurgeTable(parent, parent.field, original purge value).purge!
+if table has a primary key:
+  if no parent_tables:
+    each_batch: purge_children(batch); delete_rows(batch)
+  else:                                            # two passes
+    each_batch: purge_children(batch)
+    for each parent_table:                         # siblings sharing the key
+      PurgeTable(parent, parent.field, original purge value).purge!
+    each_batch: delete_rows(batch)
 else:
+  raise if nested child/parent tables              # no ids to propagate
   single DELETE WHERE field = value [AND conditions]
 
 for each search_table:
@@ -95,6 +103,9 @@ Key properties:
 
 - **Depth-first, children first.** A row is only deleted after everything referencing it, so FK
   constraints hold without `ON DELETE CASCADE`.
+- **Two passes when there are parent tables.** A parent table can reference this table (e.g.
+  `company_tags.company_id → companies.id`) *and* be referenced by one of its children, so it is purged
+  between the child pass and the delete pass. Tables without parent tables keep the single pass.
 - **Keyset pagination** (`pk > last_pk`) rather than `OFFSET`, so batches stay cheap on large tables and still
   advance in explain mode where nothing is actually deleted.
 - **Bounded memory.** Only one batch of ids per level of the tree is held at a time.
@@ -136,8 +147,9 @@ fetch happens inside `find_in_batches` rather than in a block the scanner contro
 - **dynamic-active-model** supplies the `database` object. The purge code only calls `database.models` and
   matches on `model.table_name`, so any object with that shape works. `DynamicPlanBuilder` additionally
   relies on `reflect_on_all_associations`.
-- **Global config.** `DBPurger.config` is process-wide and `Executor.new` overwrites it; running two purges
-  with different explain settings concurrently in one process is not supported.
+- **Config scoping.** `DBPurger.config` returns the config set by `DBPurger.with_config` for the current
+  thread, falling back to a process-wide default. `Executor#purge!` wraps the run in `with_config`, so executors
+  with different explain settings can't interfere. `MetricSubscriber.metrics` is still process-wide.
 
 ## Testing
 

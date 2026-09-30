@@ -32,6 +32,15 @@ module DBPurger
       @nested_plan != nil
     end
 
+    def parent_tables?
+      nested_tables? && !@nested_plan.parent_tables.empty?
+    end
+
+    # nested tables that depend on this table's rows (search tables scan independently)
+    def nested_key_tables?
+      nested_tables? && !(@nested_plan.child_tables.empty? && @nested_plan.parent_tables.empty?)
+    end
+
     def tables
       @nested_plan ? @nested_plan.tables : []
     end
@@ -45,7 +54,7 @@ module DBPurger
     end
 
     def mark_deleted_value
-      @mark_deleted_value || 1
+      @mark_deleted_value.nil? ? 1 : @mark_deleted_value
     end
   end
 end

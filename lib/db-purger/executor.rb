@@ -8,14 +8,14 @@ module DBPurger
     def initialize(database, plan, options = {})
       @database = database
       @plan = plan.is_a?(Plan) ? plan : load_plan(plan)
-      setup_config(options)
+      @config = Config.new(options)
       @error_io = $stderr
     end
 
     def purge!(purge_value)
       raise('purge_value is nil') if purge_value.nil?
 
-      @plan.purge!(@database, purge_value)
+      ::DBPurger.with_config(@config) { @plan.purge!(@database, purge_value) }
     end
 
     def verify!
@@ -29,12 +29,6 @@ module DBPurger
 
     def plan_validator
       @plan_validator ||= PlanValidator.new(@database, @plan)
-    end
-
-    def setup_config(options)
-      ::DBPurger.config.explain = options[:explain]
-      ::DBPurger.config.explain_file = options[:explain_file]
-      ::DBPurger.config.datetime_format = options[:datetime_format]
     end
 
     def load_plan(file)
