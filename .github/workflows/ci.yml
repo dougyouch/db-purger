@@ -42,6 +42,8 @@ jobs:
         with:
           name: coverage
           path: coverage/
+          # .last_run.json (read by the badge job) is a dotfile; upload-artifact skips those by default
+          include-hidden-files: true
           retention-days: 14
 
   # Publishes coverage.svg to the orphan `badges` branch; the README badge points at it.
