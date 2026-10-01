@@ -3,6 +3,8 @@
 module DBPurger
   # DBPurger::PlanBuilder is used to build the relationships between tables in a convenient way
   class PlanBuilder
+    NULLIFY_TABLE_OPTIONS = %i[conditions].freeze
+
     def initialize(plan)
       @plan = plan
     end
@@ -27,6 +29,22 @@ module DBPurger
         @plan.base_table.nested_plan.child_tables << table
       else
         @plan.child_tables << table
+      end
+      table
+    end
+
+    # rows whose field matches the enclosing batch's primary keys get field set to NULL instead of being deleted
+    def nullify_table(table_name, field, options = {})
+      unsupported_options = options.keys - NULLIFY_TABLE_OPTIONS
+      unless unsupported_options.empty?
+        raise(ArgumentError, "nullify_table does not support #{unsupported_options.map(&:inspect).join(', ')}")
+      end
+
+      table = create_table(table_name, field, options)
+      if @plan.base_table
+        @plan.base_table.nested_plan.nullify_tables << table
+      else
+        @plan.nullify_tables << table
       end
       table
     end

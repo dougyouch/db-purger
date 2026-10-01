@@ -8,18 +8,21 @@ module DBPurger
     attr_reader :parent_tables,
                 :child_tables,
                 :ignore_tables,
-                :search_tables
+                :search_tables,
+                :nullify_tables
 
     def initialize
       @parent_tables = []
       @child_tables = []
       @ignore_tables = []
       @search_tables = []
+      @nullify_tables = []
     end
 
     def purge!(database, purge_value)
       raise('plan has no base_table or top-level parent_table') if root_tables.empty?
       raise('top-level child_tables require a base_table') unless @base_table || @child_tables.empty?
+      raise('top-level nullify_tables require a base_table') unless @base_table || @nullify_tables.empty?
 
       MetricSubscriber.reset!
       num_deleted = purge_root_tables(database, purge_value)
@@ -37,7 +40,8 @@ module DBPurger
       all_tables = @base_table ? [@base_table] + @base_table.tables : []
       all_tables += @parent_tables + @parent_tables.map(&:tables) +
                     @child_tables + @child_tables.map(&:tables) +
-                    @search_tables + @search_tables.map(&:tables)
+                    @search_tables + @search_tables.map(&:tables) +
+                    @nullify_tables
       all_tables.flatten!
       all_tables.compact!
       all_tables
@@ -56,7 +60,8 @@ module DBPurger
       @base_table.nil? &&
         @parent_tables.empty? &&
         @child_tables.empty? &&
-        @search_tables.empty?
+        @search_tables.empty? &&
+        @nullify_tables.empty?
     end
 
     def ignore_table?(table_name)

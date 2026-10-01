@@ -36,6 +36,14 @@ module DBPurger
       )
     end
 
+    def nullify_records(event)
+      self.class.metrics.update_nullify_records_stats(
+        event.payload[:table_name],
+        event.duration,
+        event.payload[:records_nullified] || 0
+      )
+    end
+
     def next_batch(event)
       self.class.metrics.update_lookup_stats(
         event.payload[:table_name],

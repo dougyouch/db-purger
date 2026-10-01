@@ -10,7 +10,17 @@ module DBPurger
     private
 
     def purge_nested_tables(batch)
+      nullify_tables(batch) unless @table.nested_plan.nullify_tables.empty?
       purge_child_tables(batch) unless @table.nested_plan.child_tables.empty?
+    end
+
+    # unlink rows that point at this batch before anything in it is deleted
+    def nullify_tables(batch)
+      ids = batch_values(batch, model.primary_key)
+
+      @table.nested_plan.nullify_tables.each do |table|
+        NullifyTable.new(@database, table, ids).nullify!
+      end
     end
 
     def purge_child_tables(batch)
@@ -69,7 +79,7 @@ module DBPurger
     def explain(scope)
       sql =
         if @table.mark_deleted_field
-          explain_update_sql(scope)
+          explain_update_sql(scope, mark_deleted_field_quoted, mark_deleted_value_quoted)
         else
           scope.to_sql.sub(/SELECT .*?FROM/, 'DELETE FROM')
         end
@@ -77,10 +87,10 @@ module DBPurger
       scope.count
     end
 
-    def explain_update_sql(scope)
+    def explain_update_sql(scope, field_quoted, value_quoted)
       sql = scope.to_sql.dup
       sql.sub!(/SELECT .*?FROM/, 'UPDATE')
-      sql.sub!('WHERE', "SET #{mark_deleted_field_quoted} = #{mark_deleted_value_quoted} WHERE")
+      sql.sub!('WHERE', "SET #{field_quoted} = #{value_quoted} WHERE")
       sql
     end
 

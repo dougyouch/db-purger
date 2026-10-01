@@ -152,6 +152,7 @@ an error (there is no enclosing batch to take ids from). Existing `base_table` p
 | `child_table(table, field, opts = {}, &block)` | Rows whose `field` matches the **primary key** of the enclosing table's current batch. Purged before that batch is deleted. |
 | `child_table(table, :id, foreign_key: :col, &block)` | Inverted relationship: the *enclosing* table holds `col` pointing at this table's `id`. Deleted in the same transaction, right after the enclosing batch. |
 | `parent_table(table, field, opts = {}, &block)` | Rows whose `field` matches the original **purge value**. At the top level of a plan without a `base_table`, each one is a root, purged in declaration order. Purged after the enclosing table's child tables but before the enclosing table's own rows, so it may both reference the base (`company_tags.company_id → companies.id`) and be referenced by a child table. Use for sibling tables that share the same key (e.g. `company_id`). |
+| `nullify_table(table, field, conditions: nil)` | Rows whose `field` matches the **primary key** of the enclosing table's current batch get `field = NULL` instead of being deleted, before anything in that batch is deleted (`ON DELETE SET NULL` at purge time). Use for optional references that must not take the referencing row down with them: a self-referential `parent_id`/"copied from" column, or a link from another tenant's row. Only `conditions:` is supported. |
 | `purge_table_search(table, field, opts = {}) { \|batch\| ... }` | Scans the whole table in batches; the block receives each batch and returns the records to purge. For orphans that can't be reached by a key. |
 | `ignore_table(name_or_regexp)` | Exclude a table from validation. |
 
@@ -224,7 +225,9 @@ Treat the output as a first draft: it cannot infer polymorphic (`as:`), soft-del
 - every field, `foreign_key` and `mark_deleted_field` named in the plan is a real column
 - the plan has a `base_table` or at least one top-level `parent_table`, no top-level `child_table` is left
   unreachable, and every `batch_size` is positive
-- tables without a primary key have no nested child or parent tables (there would be no ids to propagate)
+- tables without a primary key have no nested child, parent or nullify tables (there would be no ids to propagate)
+- every `nullify_table` field is a nullable column, and no `nullify_table` is left at the top level without a
+  `base_table`
 
 Run it in CI against your schema so a new table can't ship without a purge decision.
 
@@ -262,6 +265,7 @@ DBPurger::MetricSubscriber.metrics.as_json
 # => { took: 12.4, started_at: ..., finished_at: ...,
 #      purge_stats:  { employments: { duration:, num_purges:, num_records: } },
 #      delete_stats: { employments: { duration:, num_delete_queries:, num_deleted:, num_expected_to_delete: } },
+#      nullify_stats: { cadences: { duration:, num_nullify_queries:, num_nullified: } },
 #      lookup_stats: { ... }, filter_stats: { ... } }
 ```
 
@@ -273,6 +277,7 @@ Metrics are reset at the start of each `Plan#purge!`. To feed your own telemetry
 | `purge.db_purger` | `table_name`, `purge_field`, `deleted` |
 | `next_batch.db_purger` | `table_name`, `start_id`, `num_records` |
 | `delete_records.db_purger` | `table_name`, `num_records`, `records_deleted`, `deleted` |
+| `nullify_records.db_purger` | `table_name`, `nullify_field`, `num_records`, `records_nullified` |
 | `search_filter.db_purger` | `table_name`, `num_records`, `num_records_selected` |
 
 ## Caveats

@@ -8,6 +8,7 @@ module DBPurger
   autoload :Executor, 'db-purger/executor'
   autoload :Metrics, 'db-purger/metrics'
   autoload :MetricSubscriber, 'db-purger/metric_subscriber'
+  autoload :NullifyTable, 'db-purger/nullify_table'
   autoload :PurgeTable, 'db-purger/purge_table'
   autoload :PurgeTableHelper, 'db-purger/purge_table_helper'
   autoload :PurgeTableScanner, 'db-purger/purge_table_scanner'

@@ -7,6 +7,7 @@ module DBPurger
                 :finished_at,
                 :purge_stats,
                 :delete_stats,
+                :nullify_stats,
                 :lookup_stats,
                 :filter_stats
 
@@ -18,6 +19,7 @@ module DBPurger
       @started_at = Time.now
       @purge_stats = {}
       @delete_stats = {}
+      @nullify_stats = {}
       @lookup_stats = {}
       @filter_stats = {}
       @finished_at = nil
@@ -48,6 +50,14 @@ module DBPurger
       stats
     end
 
+    def update_nullify_records_stats(table_name, duration, num_nullified)
+      stats = (@nullify_stats[table_name] ||= Hash.new(0))
+      stats[:duration] += duration
+      stats[:num_nullify_queries] += 1
+      stats[:num_nullified] += num_nullified
+      stats
+    end
+
     def update_lookup_stats(table_name, duration, records_found)
       stats = (@lookup_stats[table_name] ||= Hash.new(0))
       stats[:duration] += duration
@@ -72,6 +82,7 @@ module DBPurger
         finished_at: @finished_at,
         purge_stats: @purge_stats,
         delete_stats: @delete_stats,
+        nullify_stats: @nullify_stats,
         lookup_stats: @lookup_stats,
         filter_stats: @filter_stats
       }

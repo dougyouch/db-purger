@@ -35,6 +35,22 @@ describe DBPurger::PlanBuilder do
     end
   end
 
+  context '#nullify_table' do
+    it 'nests under the base_table' do
+      base = builder.base_table(:my_base_table, :id)
+      table = builder.nullify_table(:my_base_table, :source_id, conditions: { active: true })
+
+      expect(base.nested_plan.nullify_tables).to eq([table])
+      expect(table.field).to eq(:source_id)
+      expect(table.conditions).to eq(active: true)
+    end
+
+    it 'rejects options that only make sense when deleting' do
+      expect { builder.nullify_table(:my_table, :source_id, batch_size: 5, foreign_key: :x) }
+        .to raise_error(ArgumentError, 'nullify_table does not support :batch_size, :foreign_key')
+    end
+  end
+
   context '.build' do
     subject do
       DBPurger::PlanBuilder.build do
