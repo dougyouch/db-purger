@@ -25,5 +25,5 @@ Gem::Specification.new do |s|
   }
 
   s.add_dependency 'activerecord', '>= 7.0'
-  s.add_dependency 'dynamic-active-model', '~> 0.7'
+  s.add_dependency 'dynamic-active-model', '~> 0.9', '>= 0.9.1'
 end

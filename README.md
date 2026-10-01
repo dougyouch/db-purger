@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
 [![Coverage](https://raw.githubusercontent.com/dougyouch/db-purger/badges/coverage.svg)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
+[![Branch coverage](https://raw.githubusercontent.com/dougyouch/db-purger/badges/branch-coverage.svg)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
 [![Gem Version](https://img.shields.io/gem/v/db-purger)](https://rubygems.org/gems/db-purger)
 
 Purge every row tied to a single top-level record — a company, an account, a tenant — across all of the
@@ -112,16 +113,45 @@ executor.verify!            # raises 'purge plan failed verification', errors pr
 deleted = executor.purge!(42)
 ```
 
-`purge!` returns the number of base-table rows deleted.
+`purge!` returns the number of root-table rows deleted (the base table, plus any top-level `parent_table`s).
+
+### Plans with several top-level tables
+
+`base_table` is shorthand for "one root table, with everything after it nested underneath". When several tables
+are equally top-level (an outreach product's `emails`, `sms_messages` and `calls`, all keyed by `oid`), leave
+`base_table` out and declare each root as a top-level `parent_table`:
+
+```ruby
+# config/outreach.plan.rb
+parent_table(:calls, :oid) do              # calls.email_id -> emails.id, so calls go first
+  child_table(:call_notes, :call_id)
+  child_table(:call_recordings, :call_id)
+  child_table(:call_tags, :call_id)
+end
+
+parent_table(:emails, :oid) do
+  child_table(:email_attachments, :email_id)
+end
+
+parent_table(:sms_messages, :oid) do
+  child_table(:sms_deliveries, :sms_message_id)
+end
+
+ignore_table :users
+```
+
+Each root is purged by `oid = purge_value`, children first, **in declaration order**: when one root's rows
+reference another's, declare the referencing root first. Without a `base_table`, top-level `child_table`s are
+an error (there is no enclosing batch to take ids from). Existing `base_table` plans run exactly as before.
 
 ## The plan DSL
 
 | Method | Meaning |
 |---|---|
-| `base_table(table, field, opts = {}, &block)` | The root of the purge. Rows where `field = purge_value` are purged. Declare it **first** — every subsequent top-level call nests under it. |
+| `base_table(table, field, opts = {}, &block)` | Optional single root. Rows where `field = purge_value` are purged. Declare it **first** — every subsequent top-level call nests under it. |
 | `child_table(table, field, opts = {}, &block)` | Rows whose `field` matches the **primary key** of the enclosing table's current batch. Purged before that batch is deleted. |
 | `child_table(table, :id, foreign_key: :col, &block)` | Inverted relationship: the *enclosing* table holds `col` pointing at this table's `id`. Deleted in the same transaction, right after the enclosing batch. |
-| `parent_table(table, field, opts = {}, &block)` | Rows whose `field` matches the original **purge value**. Purged after the enclosing table's child tables but before the enclosing table's own rows, so it may both reference the base (`company_tags.company_id → companies.id`) and be referenced by a child table. Use for sibling tables that share the same key (e.g. `company_id`). |
+| `parent_table(table, field, opts = {}, &block)` | Rows whose `field` matches the original **purge value**. At the top level of a plan without a `base_table`, each one is a root, purged in declaration order. Purged after the enclosing table's child tables but before the enclosing table's own rows, so it may both reference the base (`company_tags.company_id → companies.id`) and be referenced by a child table. Use for sibling tables that share the same key (e.g. `company_id`). |
 | `purge_table_search(table, field, opts = {}) { \|batch\| ... }` | Scans the whole table in batches; the block receives each batch and returns the records to purge. For orphans that can't be reached by a key. |
 | `ignore_table(name_or_regexp)` | Exclude a table from validation. |
 
@@ -166,13 +196,24 @@ plan.purge!(database, 42)
 
 ### Generating a starting plan
 
-`DynamicPlanBuilder` walks the `has_many` associations dynamic-active-model discovered and emits a plan file,
-listing every unreachable table as `ignore_table`. Treat the output as a first draft: it only knows about
-conventional `<singular_table>_id` foreign keys and cannot infer polymorphic, soft-delete, or search rules.
+`DynamicPlanBuilder` walks the `has_many`, `has_one` and `has_and_belongs_to_many` associations
+dynamic-active-model discovered, using each association's real foreign key, and emits a plan file listing every
+unreachable table as `ignore_table`.
 
 ```ruby
-puts DBPurger::DynamicPlanBuilder.new(database).build(:companies, :id)
+builder = DBPurger::DynamicPlanBuilder.new(database)
+puts builder.build(:companies, :id)   # single base_table plan
+puts builder.build_for(:oid)          # one top-level parent_table per table holding oid
 ```
+
+`build_for` makes **every** table holding the field a root, so rows with a null foreign key to another root
+(an `email_recipients` row without an email) are still purged, and orders the roots so a root referencing
+another root's rows comes first. HABTM join tables are emitted as leaves, never walking into the shared table on
+the other side, and nothing is nested under a table without a primary key. A foreign-key cycle is written as a
+comment instead of recursing.
+
+Treat the output as a first draft: it cannot infer polymorphic (`as:`), soft-delete, `belongs_to`-owned
+(`foreign_key:`) or search rules.
 
 ## Validation
 
@@ -181,7 +222,8 @@ puts DBPurger::DynamicPlanBuilder.new(database).build(:companies, :id)
 - every table in the database is either in the plan or ignored (`missing_tables`)
 - every table in the plan exists in the database (`unknown_tables`)
 - every field, `foreign_key` and `mark_deleted_field` named in the plan is a real column
-- the plan has a `base_table`, and every `batch_size` is positive
+- the plan has a `base_table` or at least one top-level `parent_table`, no top-level `child_table` is left
+  unreachable, and every `batch_size` is positive
 - tables without a primary key have no nested child or parent tables (there would be no ids to propagate)
 
 Run it in CI against your schema so a new table can't ship without a purge decision.
@@ -235,8 +277,8 @@ Metrics are reset at the start of each `Plan#purge!`. To feed your own telemetry
 
 ## Caveats
 
-- **Only the base table is the entry point.** Top-level `parent_table`/`child_table` calls made before
-  `base_table` are ignored by `Plan#purge!`.
+- **Declare `base_table` first.** A `child_table` declared before it is never reached (the validator reports
+  it); a `parent_table` declared before it becomes a separate root, purged after the base table.
 - **Not one big transaction.** Each batch is its own set of statements (foreign-key children share a
   transaction with their parent batch). An interrupted purge is safe to re-run with the same value.
 - **Soft-deleted rows still match.** A `mark_deleted_field` table is not filtered on that field; add
@@ -254,7 +296,7 @@ script/console
 
 CI (`.github/workflows/ci.yml`) runs RuboCop and the specs on Ruby 4.0 for every push and pull request.
 The HTML coverage report is attached to each run as the `coverage` artifact, and pushes to `master` refresh
-the coverage badge on the `badges` branch.
+the line and branch coverage badges on the `badges` branch.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together.
 
