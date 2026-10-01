@@ -30,7 +30,8 @@ describe DBPurger::Metrics do
       plan.purge!(DYNAMIC_DATABASE, 1)
 
       json = DBPurger::MetricSubscriber.metrics.as_json
-      expect(json.keys).to eq(%i[took started_at finished_at purge_stats delete_stats lookup_stats filter_stats])
+      expect(json.keys).to eq(%i[took started_at finished_at purge_stats delete_stats nullify_stats lookup_stats
+                                 filter_stats])
       expect(json[:took]).to be >= 0
       expect(json[:finished_at]).to be >= json[:started_at]
       expect(json[:delete_stats][:employments][:num_deleted]).to eq(1)

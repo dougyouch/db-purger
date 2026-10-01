@@ -11,6 +11,7 @@ module DBPurger
     validate :validate_no_missing_tables
     validate :validate_no_unknown_tables
     validate :validate_tables
+    validate :validate_nullify_tables
 
     def initialize(database, plan)
       @database = database
@@ -36,6 +37,8 @@ module DBPurger
       elsif !@plan.child_tables.empty?
         # without a base_table there are no ids to propagate; declared before one, they are never reached
         errors.add(:base_table, 'must be declared before top-level child_tables')
+      elsif !@plan.nullify_tables.empty?
+        errors.add(:base_table, 'must be declared before top-level nullify_tables')
       end
     end
 
@@ -49,6 +52,27 @@ module DBPurger
 
     def validate_tables
       @plan.tables.each { |table| validate_table_definition(table) }
+    end
+
+    # a NOT NULL column can't be unlinked, so the purge would fail at runtime instead of here
+    def validate_nullify_tables
+      nullify_tables.each do |table|
+        next unless (model = find_model_for_table(table)) # reported by validate_tables
+        next unless not_nullable_column?(model, table.field)
+
+        errors.add(:table, "#{table.name}.#{table.field} (nullify_table) is not nullable")
+      end
+    end
+
+    # a missing column is reported by validate_tables
+    def not_nullable_column?(model, field)
+      column = model.columns_hash[field.to_s]
+      column && !column.null
+    end
+
+    def nullify_tables
+      @plan.nullify_tables +
+        @plan.tables.select(&:nested_tables?).flat_map { |table| table.nested_plan.nullify_tables }
     end
 
     def validate_table_definition(table)

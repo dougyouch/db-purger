@@ -38,7 +38,8 @@ module DBPurger
 
     # nested tables that depend on this table's rows (search tables scan independently)
     def nested_key_tables?
-      nested_tables? && !(@nested_plan.child_tables.empty? && @nested_plan.parent_tables.empty?)
+      nested_tables? &&
+        !(@nested_plan.child_tables.empty? && @nested_plan.parent_tables.empty? && @nested_plan.nullify_tables.empty?)
     end
 
     def tables

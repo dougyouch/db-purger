@@ -31,12 +31,13 @@ db-purger is small (~900 lines) and splits cleanly into three layers: **describe
 | `lib/db-purger.rb` | Autoloads everything; holds the global `DBPurger.config`. |
 | `config.rb` | Global options: `explain?`, `explain_file`, `datetime_format`. |
 | `table.rb` | Value object for one table in the plan: name, match field, options, and a lazily created nested `Plan`. |
-| `plan.rb` | A node in the plan tree: one optional `base_table` plus lists of parent, child, search and ignored tables. `#purge!` is the run entry point; `#root_tables` are the tables it starts from. |
+| `plan.rb` | A node in the plan tree: one optional `base_table` plus lists of parent, child, nullify, search and ignored tables. `#purge!` is the run entry point; `#root_tables` are the tables it starts from. |
 | `plan_builder.rb` | The DSL. `instance_eval`s a plan file or block against a `Plan`; nested blocks get a new builder bound to that table's nested plan. |
 | `plan_validator.rb` | `ActiveModel::Validations` over plan vs. schema: missing tables, unknown tables, unknown columns. |
 | `executor.rb` | Convenience façade: loads a plan file, applies config options, `verify!`, `purge!`. |
 | `purge_table.rb` | Purges one table by `field = value(s)` in primary-key batches. Recurses into nested tables. |
 | `purge_table_scanner.rb` | Purges a `purge_table_search` table: full `find_in_batches` scan filtered through the user's `search_proc`. |
+| `nullify_table.rb` | Sets a nullable column to `NULL` on rows pointing at a batch of ids about to be deleted (`ON DELETE SET NULL` at purge time). |
 | `purge_table_helper.rb` | Shared behaviour for both purgers: nested-table recursion, delete vs. soft delete vs. explain, transactions. |
 | `metrics.rb` / `metric_subscriber.rb` | Aggregate timing and row counts per table from the notification events. |
 | `dynamic_plan_builder.rb` | Generates plan-file source (`build` for a base table, `build_for` for several roots); a bootstrap tool, not used at purge time. |
@@ -54,6 +55,7 @@ Plan (root)
     └── nested Plan
         ├── parent_tables: [company_tags(:company_id)]
         ├── child_tables:  [employments(:company_id) ─▶ nested Plan ..., websites(:id, fk: website_id) ...]
+        ├── nullify_tables: [companies(:acquired_by_company_id)]
         ├── search_tables: [users(:id)]
         └── ignore_tables
 ```
@@ -87,6 +89,8 @@ each_batch = loop:
     break if batch empty
 
 purge_children(batch) =
+    for each nullify_table:                        # optional rows pointing at us
+      UPDATE nullify SET field = NULL WHERE field IN (batch.pks) [AND conditions]
     for each child_table without foreign_key:      # rows pointing at us
       PurgeTable(child, child.field, batch.pks).purge!    (recursive)
 
@@ -118,6 +122,9 @@ Key properties:
 
 - **Depth-first, children first.** A row is only deleted after everything referencing it, so FK
   constraints hold without `ON DELETE CASCADE`.
+- **Unlink before delete.** A `nullify_table` is updated for each batch before that batch's children and rows
+  are deleted, so a self-referential foreign key (or a reference from a row that must survive) never blocks the
+  delete, whatever the chain depth or id order across batches.
 - **Two passes when there are parent tables.** A parent table can reference this table (e.g.
   `company_tags.company_id → companies.id`) *and* be referenced by one of its children, so it is purged
   between the child pass and the delete pass. Tables without parent tables keep the single pass.
@@ -146,7 +153,7 @@ All three go through ActiveRecord's `*_all` methods: no model callbacks or valid
 ## Instrumentation
 
 Every unit of work is wrapped in `ActiveSupport::Notifications.instrument` under the `db_purger` namespace
-(`purge`, `next_batch`, `delete_records`, `search_filter`). The purgers never talk to `Metrics` directly;
+(`purge`, `next_batch`, `delete_records`, `nullify_records`, `search_filter`). The purgers never talk to `Metrics` directly;
 `MetricSubscriber` (an `ActiveSupport::Subscriber`) translates events into `Metrics` counters. This keeps the
 purge code free of reporting concerns and lets callers attach their own subscribers (StatsD, logs, progress
 bars) without changes to the library.
