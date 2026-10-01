@@ -6,7 +6,14 @@ Metrics/ModuleLength:
   Max: 120
 Metrics/MethodLength:
   Max: 20
+# Add our Exclude list to RuboCop's defaults (vendor/**/*, etc.) instead of replacing them;
+# CI installs gems into vendor/bundle via setup-ruby's bundler-cache.
+inherit_mode:
+  merge:
+    - Exclude
 AllCops:
+  NewCops: disable
+  SuggestExtensions: false
   Exclude:
     - 'spec/factories/test_factory.rb'
     - 'spec/support/db/schema.rb'
