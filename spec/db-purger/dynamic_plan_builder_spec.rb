@@ -12,24 +12,30 @@ describe DBPurger::DynamicPlanBuilder do
 <<-STR
 base_table(:companies, :id)
 
-parent_table(:stats_company_employments, :company_id)
 parent_table(:company_tags, :company_id)
 parent_table(:employments, :company_id) do
-  child_table(:stats_employment_durations, :employment_id)
   child_table(:employment_notes, :employment_id)
+  child_table(:stats_employment_durations, :employment_id)
 end
+parent_table(:stats_company_employments, :company_id)
 
-ignore_table :events
-ignore_table :websites
 ignore_table :contents
+ignore_table :events
 ignore_table :jobs
-ignore_table :users
 ignore_table :tags
+ignore_table :users
+ignore_table :websites
 STR
     end
     subject { dynamic_plan_builder.build(base_table_name, field) }
 
     it 'creates a purge plan' do
+      expect(subject).to eq(expected_output)
+    end
+
+    # table listing order varies by platform/adapter; the generated plan must not
+    it 'is independent of the order database.models returns tables in' do
+      allow(database).to receive(:models).and_return(database.models.reverse)
       expect(subject).to eq(expected_output)
     end
 
@@ -40,19 +46,19 @@ STR
 <<-STR
 base_table(:employments, :company_id)
 
-parent_table(:stats_company_employments, :company_id)
 parent_table(:company_tags, :company_id)
+parent_table(:stats_company_employments, :company_id)
 
-child_table(:stats_employment_durations, :employment_id)
 child_table(:employment_notes, :employment_id)
+child_table(:stats_employment_durations, :employment_id)
 
-ignore_table :events
-ignore_table :websites
-ignore_table :contents
-ignore_table :jobs
-ignore_table :users
-ignore_table :tags
 ignore_table :companies
+ignore_table :contents
+ignore_table :events
+ignore_table :jobs
+ignore_table :tags
+ignore_table :users
+ignore_table :websites
 STR
       end
 
