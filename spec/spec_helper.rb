@@ -6,7 +6,11 @@ require 'securerandom'
 require 'active_record'
 require 'simplecov'
 
-SimpleCov.start
+SimpleCov.start do
+  enable_coverage :branch
+
+  cover 'lib/**/*.rb'
+end
 
 begin
   Bundler.require(:default, :spec)
