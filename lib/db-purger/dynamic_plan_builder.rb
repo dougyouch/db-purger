@@ -47,7 +47,7 @@ module DBPurger
     end
 
     def add_parent_tables(base_table_name, field)
-      @database.models.each do |model|
+      sorted_models.each do |model|
         next if model.table_name == base_table_name.to_s
         next unless column?(model, field)
 
@@ -70,7 +70,13 @@ module DBPurger
     end
 
     def find_child_models(model, field)
-      model_has_many_associations(model).map(&:klass).select { |m| column?(m, field) }
+      model_has_many_associations(model).map(&:klass).select { |m| column?(m, field) }.sort_by(&:table_name)
+    end
+
+    # database.models order depends on how the adapter lists tables, which varies by platform;
+    # sort so the generated plan is deterministic
+    def sorted_models
+      @sorted_models ||= @database.models.sort_by(&:table_name)
     end
 
     def model_has_many_associations(model)
@@ -99,7 +105,7 @@ module DBPurger
     end
 
     def ignore_missing_tables
-      missing_tables = @database.models.map(&:table_name) - @tables
+      missing_tables = sorted_models.map(&:table_name) - @tables
       return if missing_tables.empty?
 
       line_break
