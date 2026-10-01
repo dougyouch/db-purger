@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
 [![Coverage](https://raw.githubusercontent.com/dougyouch/db-purger/badges/coverage.svg)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
+[![Branch coverage](https://raw.githubusercontent.com/dougyouch/db-purger/badges/branch-coverage.svg)](https://github.com/dougyouch/db-purger/actions/workflows/ci.yml)
 [![Gem Version](https://img.shields.io/gem/v/db-purger)](https://rubygems.org/gems/db-purger)
 
 Purge every row tied to a single top-level record — a company, an account, a tenant — across all of the
@@ -295,7 +296,7 @@ script/console
 
 CI (`.github/workflows/ci.yml`) runs RuboCop and the specs on Ruby 4.0 for every push and pull request.
 The HTML coverage report is attached to each run as the `coverage` artifact, and pushes to `master` refresh
-the coverage badge on the `badges` branch.
+the line and branch coverage badges on the `badges` branch.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together.
 
