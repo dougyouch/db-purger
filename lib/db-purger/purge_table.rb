@@ -13,10 +13,6 @@ module DBPurger
       @num_deleted = 0
     end
 
-    def model
-      @model ||= @database.models.detect { |m| m.table_name == @table.name.to_s }
-    end
-
     def purge!
       ActiveSupport::Notifications.instrument('purge.db_purger',
                                               table_name: @table.name,

@@ -49,6 +49,17 @@ describe DBPurger::Executor do
     let(:purge_value) { 1 }
     subject { executor.purge!(purge_value) }
 
+    # a nil purge value would match every row where the field IS NULL, across all orgs
+    describe 'nil purge_value' do
+      let(:purge_value) { nil }
+
+      it 'refuses to purge' do
+        expect {
+          expect { subject }.to raise_error(RuntimeError, 'purge_value is nil')
+        }.not_to change { TestDB::Company.count }
+      end
+    end
+
     let!(:tag1) { create :tag }
     let!(:tag2) { create :tag }
     let!(:tag3) { create :tag }

@@ -69,6 +69,28 @@ STR
     end
   end
 
+  context '#build with a non primary key field and no child tables' do
+    it 'lists the sibling parent_tables without an empty child section' do
+      expect(dynamic_plan_builder.build(:stats_company_employments, :company_id)).to eq(<<~STR)
+        base_table(:stats_company_employments, :company_id)
+
+        parent_table(:company_tags, :company_id)
+        parent_table(:employments, :company_id) do
+          child_table(:employment_notes, :employment_id)
+          child_table(:stats_employment_durations, :employment_id)
+        end
+
+        ignore_table :companies
+        ignore_table :contents
+        ignore_table :events
+        ignore_table :jobs
+        ignore_table :tags
+        ignore_table :users
+        ignore_table :websites
+      STR
+    end
+  end
+
   context '#build_for' do
     subject { dynamic_plan_builder.build_for(:company_id) }
 

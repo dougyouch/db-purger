@@ -14,14 +14,14 @@ module DBPurger
       @table_names = []
     end
 
-    def table(table_type, table_name, field, note = nil)
+    def table(table_type, table_name, field)
       @table_names << table_name
-      write("#{table_call(table_type, table_name, field)}#{" # #{note}" if note}")
+      write(table_call(table_type, table_name, field))
     end
 
-    def table_block(table_type, table_name, field, note = nil)
+    def table_block(table_type, table_name, field)
       @table_names << table_name
-      write("#{table_call(table_type, table_name, field)} do#{" # #{note}" if note}")
+      write("#{table_call(table_type, table_name, field)} do")
       @indent_depth += 1
       yield
       @indent_depth -= 1

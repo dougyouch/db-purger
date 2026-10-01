@@ -43,11 +43,9 @@ module DBPurger
       all_tables
     end
 
+    # the tables of a nested plan (nested plans never have a base_table)
     def foreign_tables
-      (@base_table ? [@base_table] : []) +
-        @parent_tables +
-        @child_tables +
-        @search_tables
+      @parent_tables + @child_tables + @search_tables
     end
 
     def table_names

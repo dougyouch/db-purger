@@ -212,6 +212,83 @@ describe 'purge safety' do
     end
   end
 
+  describe 'top-level purge_table_search without a base_table' do
+    let!(:company1) { create(:company, id: 1) }
+    let!(:company2) { create(:company, id: 2) }
+    let!(:orphan_a) { create(:user, name: 'orphan a') }
+    let!(:orphan_b) { create(:user, name: 'orphan b') }
+    let!(:kept_user) { create(:user, name: 'kept') }
+
+    it 'runs after the roots and deletes only the records the search selects' do
+      plan = DBPurger::PlanBuilder.build do
+        parent_table(:companies, :id)
+        purge_table_search(:users, :id) { |users| users.select { |user| user.name.start_with?('orphan') } }
+      end
+
+      expect(plan.purge!(database, 1)).to eq(1)
+      expect(TestDB::Company.pluck(:id)).to eq([2])
+      expect(TestDB::User.pluck(:id)).to eq([kept_user.id])
+    end
+
+    it 'applies conditions before the search sees the batch' do
+      plan = DBPurger::PlanBuilder.build do
+        parent_table(:companies, :id)
+        purge_table_search(:users, :id, conditions: { name: 'orphan a' }) { |users| users }
+      end
+
+      plan.purge!(database, 1)
+      expect(TestDB::User.pluck(:id).sort).to eq([orphan_b.id, kept_user.id].sort)
+    end
+  end
+
+  describe 'conditions on a table without a primary key' do
+    let!(:tag1) { create(:tag) }
+    let!(:tag2) { create(:tag) }
+    let!(:company1) { create(:company, id: 1) }
+    let!(:company2) { create(:company, id: 2) }
+    let!(:purged) { create(:company_tag, company: company1, tag: tag1) }
+
+    before do
+      create(:company_tag, company: company1, tag: tag2)
+      create(:company_tag, company: company2, tag: tag1)
+    end
+
+    it 'adds the conditions to the single unbatched delete' do
+      tag_id = tag1.id
+      plan = DBPurger::PlanBuilder.build do
+        parent_table(:company_tags, :company_id, conditions: { tag_id: tag_id })
+      end
+
+      plan.purge!(database, 1)
+      expect(TestDB::CompanyTag.pluck(:company_id, :tag_id).sort)
+        .to eq([[company1.id, tag2.id], [company2.id, tag1.id]].sort)
+    end
+  end
+
+  describe 'foreign_key child whose values are all NULL' do
+    let!(:company) { create(:company, id: 1, website_id: nil) }
+    let!(:unrelated_website) { create(:website) }
+    let(:plan) do
+      DBPurger::PlanBuilder.build do
+        base_table(:companies, :id)
+        child_table(:websites, :id, foreign_key: :website_id)
+      end
+    end
+
+    it 'never starts a purge of the child' do
+      purged_tables = []
+      subscriber = ->(*, payload) { purged_tables << payload[:table_name] }
+
+      ActiveSupport::Notifications.subscribed(subscriber, 'purge.db_purger') do
+        plan.purge!(database, 1)
+      end
+
+      expect(purged_tables).to eq([:companies])
+      expect(TestDB::Company.count).to eq(0)
+      expect(TestDB::Website.pluck(:id)).to eq([unrelated_website.id])
+    end
+  end
+
   describe 'parent_table with a real foreign key to the base table' do
     db_file = 'spec/fk_test.db'
 
