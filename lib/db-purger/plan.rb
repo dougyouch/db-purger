@@ -18,12 +18,19 @@ module DBPurger
     end
 
     def purge!(database, purge_value)
-      raise('plan has no base_table') unless @base_table
+      raise('plan has no base_table or top-level parent_table') if root_tables.empty?
+      raise('top-level child_tables require a base_table') unless @base_table || @child_tables.empty?
 
       MetricSubscriber.reset!
-      num_deleted = PurgeTable.new(database, @base_table, @base_table.field, purge_value).purge!
+      num_deleted = purge_root_tables(database, purge_value)
+      purge_search_tables(database)
       MetricSubscriber.finished!
       num_deleted
+    end
+
+    # tables that receive the purge value directly: the base_table (if any) and top-level parent_tables
+    def root_tables
+      (@base_table ? [@base_table] : []) + @parent_tables
     end
 
     def tables
@@ -61,6 +68,21 @@ module DBPurger
         else
           ignore_table_name.to_s == table_name
         end
+      end
+    end
+
+    private
+
+    def purge_root_tables(database, purge_value)
+      root_tables.sum do |table|
+        PurgeTable.new(database, table, table.field, purge_value).purge!
+      end
+    end
+
+    # with a base_table these live in its nested plan and are purged by it
+    def purge_search_tables(database)
+      @search_tables.each do |table|
+        PurgeTableScanner.new(database, table).purge!
       end
     end
   end

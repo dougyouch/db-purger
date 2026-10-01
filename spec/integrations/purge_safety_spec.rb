@@ -159,6 +159,57 @@ describe 'purge safety' do
         expect { plan.purge!(database, 1) }.to raise_error(RuntimeError, /base_table/)
       end
     end
+
+    describe 'top-level parent_tables without a base_table' do
+      let(:plan) do
+        spec = self
+        DBPurger::PlanBuilder.build do
+          parent_table(:companies, :id)
+          spec.ignore_others(self, :companies)
+        end
+      end
+
+      it 'is valid' do
+        expect(validator.valid?).to eq(true)
+      end
+
+      it 'purges each root by the purge value' do
+        create(:company, id: 1)
+        create(:company, id: 2)
+        expect(plan.purge!(database, 1)).to eq(1)
+        expect(TestDB::Company.pluck(:id)).to eq([2])
+      end
+    end
+
+    describe 'top-level child_table alongside parent_tables without a base_table' do
+      let(:plan) do
+        spec = self
+        DBPurger::PlanBuilder.build do
+          parent_table(:companies, :id)
+          child_table(:employments, :company_id)
+          spec.ignore_others(self, :companies, :employments)
+        end
+      end
+
+      it 'is invalid' do
+        expect(validator.valid?).to eq(false)
+        expect(validator.errors[:base_table].join).to include('top-level child_tables')
+      end
+
+      it 'is invalid when the child_table is declared before the base_table' do
+        spec = self
+        early_child = DBPurger::PlanBuilder.build do
+          child_table(:employments, :company_id)
+          base_table(:companies, :id)
+          spec.ignore_others(self, :companies, :employments)
+        end
+        expect(DBPurger::PlanValidator.new(database, early_child).valid?).to eq(false)
+      end
+
+      it 'refuses to purge rather than skipping the child_table' do
+        expect { plan.purge!(database, 1) }.to raise_error(RuntimeError, /top-level child_tables/)
+      end
+    end
   end
 
   describe 'parent_table with a real foreign key to the base table' do

@@ -29,8 +29,14 @@ module DBPurger
 
     private
 
+    # a plan is rooted either by a base_table or by one or more top-level parent_tables
     def validate_base_table
-      errors.add(:base_table, 'is required') unless @plan.base_table
+      if @plan.root_tables.empty?
+        errors.add(:base_table, 'or a top-level parent_table is required')
+      elsif !@plan.child_tables.empty?
+        # without a base_table there are no ids to propagate; declared before one, they are never reached
+        errors.add(:base_table, 'must be declared before top-level child_tables')
+      end
     end
 
     def validate_no_missing_tables

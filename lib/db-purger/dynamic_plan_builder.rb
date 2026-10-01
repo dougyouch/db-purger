@@ -3,115 +3,124 @@
 module DBPurger
   # DBPurger::DynamicPlanBuilder generates a purge plan based on the database relations
   class DynamicPlanBuilder
-    INDENT = '  '
-
-    attr_reader :output
-
     def initialize(database)
-      @database = database
-      @output = ''.dup
-      @indent_depth = 0
-      @tables = []
+      @graph = AssociationGraph.new(database)
+      @writer = PlanWriter.new
     end
 
+    def output
+      @writer.output
+    end
+
+    # plan rooted at a single base table
     def build(base_table_name, field)
-      write_table('base', base_table_name.to_s, field, [], nil)
-      line_break
-      model = find_model_for_table(base_table_name)
-      foreign_key = foreign_key_name(model)
+      model = @graph.model_for(base_table_name)
+      @writer.table('base', model.table_name, field)
+      @writer.line_break
       if model.primary_key == field.to_s
-        add_parent_tables(base_table_name, foreign_key)
+        add_referencing_parent_tables(model)
       else
-        add_parent_tables(base_table_name, field)
-        unless (child_models = find_child_models(model, foreign_key)).empty?
-          line_break unless field == :id
-          add_child_tables(child_models, foreign_key, 0)
-        end
+        add_sibling_parent_tables(model, field)
+        add_base_child_tables(model)
       end
-      ignore_missing_tables
-      @output
+      finish
+    end
+
+    # plan with one top-level parent_table per table holding field (e.g. :oid), each purged by field
+    # directly so rows with a null foreign key are not missed; the tables referencing each root are nested
+    # under it, and roots are ordered so a root referencing another root's rows is purged first
+    def build_for(field)
+      @root_field = field.to_s
+      ordered_root_models.each_with_index do |model, idx|
+        @writer.line_break if idx.positive?
+        write_table('parent', model, field, [])
+      end
+      finish
     end
 
     private
 
-    def find_model_for_table(base_table_name)
-      @database.models.detect { |m| m.table_name == base_table_name.to_s }
+    def finish
+      @writer.ignore_tables(@graph.models.map(&:table_name) - @writer.table_names)
+      output
     end
 
-    def write(str)
-      @output << "#{INDENT * @indent_depth}#{str}\n"
+    # base_table(:companies, :id): tables holding companies.id are keyed directly on the purge value
+    def add_referencing_parent_tables(model)
+      @graph.edges(model).each { |edge| write_edge('parent', edge, [model]) }
     end
 
-    def line_break
-      @output << "\n"
-    end
+    # base_table(:employments, :company_id): other tables holding company_id share the purge value
+    def add_sibling_parent_tables(model, field)
+      @graph.models.each do |sibling|
+        next if sibling == model || !@graph.column?(sibling, field)
 
-    def add_parent_tables(base_table_name, field)
-      sorted_models.each do |model|
-        next if model.table_name == base_table_name.to_s
-        next unless column?(model, field)
-
-        foreign_key = foreign_key_name(model)
-        write_table('parent', model.table_name, field, find_child_models(model, foreign_key), foreign_key)
+        write_table('parent', sibling, field, [model])
       end
     end
 
-    def add_child_tables(child_models, field, change_indent_by = 1)
-      @indent_depth += change_indent_by
-      child_models.each do |model|
-        add_child_table(model, field)
-      end
-      @indent_depth -= change_indent_by
+    def add_base_child_tables(model)
+      edges = nestable_edges(model)
+      return if edges.empty?
+
+      @writer.line_break
+      edges.each { |edge| write_edge('child', edge, [model]) }
     end
 
-    def add_child_table(model, field)
-      foreign_key = foreign_key_name(model)
-      write_table('child', model.table_name, field, find_child_models(model, foreign_key), foreign_key)
-    end
-
-    def find_child_models(model, field)
-      model_has_many_associations(model).map(&:klass).select { |m| column?(m, field) }.sort_by(&:table_name)
-    end
-
-    # database.models order depends on how the adapter lists tables, which varies by platform;
-    # sort so the generated plan is deterministic
-    def sorted_models
-      @sorted_models ||= @database.models.sort_by(&:table_name)
-    end
-
-    def model_has_many_associations(model)
-      model.reflect_on_all_associations.select do |assoc|
-        assoc.is_a?(ActiveRecord::Reflection::HasManyReflection)
-      end
-    end
-
-    def foreign_key_name(model)
-      "#{model.table_name.singularize}_id"
-    end
-
-    def column?(model, field)
-      model.columns.detect { |c| c.name == field.to_s } != nil
-    end
-
-    def write_table(table_type, table_name, field, child_models, foreign_key)
-      @tables << table_name
-      if child_models.empty?
-        write("#{table_type}_table(#{table_name.to_sym.inspect}, #{field.to_sym.inspect})")
+    def write_edge(table_type, edge, ancestors)
+      if ancestors.include?(edge.model)
+        @writer.comment("#{table_type}_table(#{edge.model.table_name.to_sym.inspect}, " \
+                        "#{edge.foreign_key.to_sym.inspect}) skipped: cycle back to #{edge.model.table_name}")
       else
-        write("#{table_type}_table(#{table_name.to_sym.inspect}, #{field.to_sym.inspect}) do")
-        add_child_tables(child_models, foreign_key)
-        write('end')
+        write_table(table_type, edge.model, edge.foreign_key, ancestors)
       end
     end
 
-    def ignore_missing_tables
-      missing_tables = sorted_models.map(&:table_name) - @tables
-      return if missing_tables.empty?
-
-      line_break
-      missing_tables.each do |table_name|
-        write("ignore_table #{table_name.to_sym.inspect}")
+    def write_table(table_type, model, field, ancestors)
+      edges = nestable_edges(model)
+      if edges.empty?
+        @writer.table(table_type, model.table_name, field)
+        warn_unnestable(model)
+      else
+        @writer.table_block(table_type, model.table_name, field) do
+          edges.each { |edge| write_edge('child', edge, ancestors + [model]) }
+        end
       end
+    end
+
+    # purging nested tables needs this table's primary keys to propagate
+    def nestable_edges(model)
+      return [] unless model.primary_key
+
+      @graph.edges(model).reject { |edge| root_model?(edge.model) }
+    end
+
+    def root_model?(model)
+      @root_field && @graph.column?(model, @root_field)
+    end
+
+    def warn_unnestable(model)
+      return if model.primary_key || (edges = @graph.edges(model)).empty?
+
+      @writer.comment("#{model.table_name} has no primary key; cannot nest " \
+                      "#{edges.map { |edge| edge.model.table_name }.join(', ')}")
+    end
+
+    # repeatedly take the first root (by name) whose referencing roots are already written; on a cycle,
+    # fall back to name order so no root is dropped
+    def ordered_root_models
+      remaining = @graph.models.select { |model| root_model?(model) }
+      ordered = []
+      until remaining.empty?
+        model = remaining.detect { |root| (purged_first(root) & remaining).empty? } || remaining.first
+        ordered << remaining.delete(model)
+      end
+      ordered
+    end
+
+    # roots holding rows that reference root's rows (directly or through nested tables)
+    def purged_first(root)
+      @graph.reachable(root).select { |model| model != root && root_model?(model) }
     end
   end
 end

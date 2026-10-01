@@ -31,7 +31,7 @@ db-purger is small (~900 lines) and splits cleanly into three layers: **describe
 | `lib/db-purger.rb` | Autoloads everything; holds the global `DBPurger.config`. |
 | `config.rb` | Global options: `explain?`, `explain_file`, `datetime_format`. |
 | `table.rb` | Value object for one table in the plan: name, match field, options, and a lazily created nested `Plan`. |
-| `plan.rb` | A node in the plan tree: one optional `base_table` plus lists of parent, child, search and ignored tables. `#purge!` is the run entry point. |
+| `plan.rb` | A node in the plan tree: one optional `base_table` plus lists of parent, child, search and ignored tables. `#purge!` is the run entry point; `#root_tables` are the tables it starts from. |
 | `plan_builder.rb` | The DSL. `instance_eval`s a plan file or block against a `Plan`; nested blocks get a new builder bound to that table's nested plan. |
 | `plan_validator.rb` | `ActiveModel::Validations` over plan vs. schema: missing tables, unknown tables, unknown columns. |
 | `executor.rb` | Convenience façade: loads a plan file, applies config options, `verify!`, `purge!`. |
@@ -39,7 +39,9 @@ db-purger is small (~900 lines) and splits cleanly into three layers: **describe
 | `purge_table_scanner.rb` | Purges a `purge_table_search` table: full `find_in_batches` scan filtered through the user's `search_proc`. |
 | `purge_table_helper.rb` | Shared behaviour for both purgers: nested-table recursion, delete vs. soft delete vs. explain, transactions. |
 | `metrics.rb` / `metric_subscriber.rb` | Aggregate timing and row counts per table from the notification events. |
-| `dynamic_plan_builder.rb` | Generates plan-file source from `has_many` associations; a bootstrap tool, not used at purge time. |
+| `dynamic_plan_builder.rb` | Generates plan-file source (`build` for a base table, `build_for` for several roots); a bootstrap tool, not used at purge time. |
+| `association_graph.rb` | For the generator: which tables reference a model, and by which column, from its `has_many`/`has_one`/HABTM reflections. |
+| `plan_writer.rb` | For the generator: renders plan DSL text and records which tables it wrote. |
 
 ## The plan tree
 
@@ -56,12 +58,25 @@ Plan (root)
         └── ignore_tables
 ```
 
+Without a `base_table`, top-level `parent_table`s stay in the root plan's `parent_tables` and each one is a
+root:
+
+```
+Plan (root)
+├── parent_tables: [calls(:oid) ─▶ nested Plan ..., emails(:oid) ─▶ nested Plan ..., sms_messages(:oid) ...]
+├── search_tables
+└── ignore_tables
+```
+
 `Plan#tables` flattens this tree for validation; `Table#foreign_keys` collects the `foreign_key:` columns of
 a table's direct children so the purger can `SELECT` them alongside the primary key.
 
 ## Purge algorithm
 
-`Plan#purge!` resets metrics and starts a `PurgeTable` on the base table with the purge value. Each
+`Plan#purge!` resets metrics and starts a `PurgeTable` with the purge value on each root table
+(`root_tables` = the `base_table`, if any, followed by top-level `parent_tables`, in declaration order), then runs
+any top-level search tables. With a `base_table`, `root_tables` is just `[base_table]`, which is the original
+single-root algorithm. Each
 `PurgeTable#purge!` does:
 
 ```
@@ -157,4 +172,8 @@ fetch happens inside `find_in_batches` rather than in a block the scanner contro
 - `spec/integrations/*` — end-to-end purges over the schema in `spec/support/db/schema.rb`, asserting row-count
   deltas per table and, for explain mode, the exact SQL in `spec/fixtures/delete_plan.sql`.
 - `spec/support/test_db.rb` builds a fresh SQLite database and dynamic models (`TestDB::*`) for each run.
+- `spec/integrations/multi_root_plan_spec.rb` purges one org from a separate outreach schema (`spec/support/outreach_db.rb`,
+  real FOREIGN KEY constraints) seeded with two orgs by `OutreachSeeder`, and asserts the exact surviving rows of
+  every table for the generated plan, a hand-written small-batch plan and the equivalent `base_table` plan.
+- `spec/support/throwaway_db.rb` builds standalone SQLite databases from raw SQL for schema-specific specs.
 - `spec/fixtures/*.plan.rb` — plan files used for loading and validation cases.

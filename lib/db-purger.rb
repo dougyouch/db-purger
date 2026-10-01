@@ -2,6 +2,7 @@
 
 # DBPurger is a tool to delete data from tables based on a initial purge value
 module DBPurger
+  autoload :AssociationGraph, 'db-purger/association_graph'
   autoload :Config, 'db-purger/config'
   autoload :DynamicPlanBuilder, 'db-purger/dynamic_plan_builder'
   autoload :Executor, 'db-purger/executor'
@@ -13,6 +14,7 @@ module DBPurger
   autoload :Plan, 'db-purger/plan'
   autoload :PlanBuilder, 'db-purger/plan_builder'
   autoload :PlanValidator, 'db-purger/plan_validator'
+  autoload :PlanWriter, 'db-purger/plan_writer'
   autoload :Table, 'db-purger/table'
 
   # The config in effect for the current thread: the one set by with_config, else the global default
