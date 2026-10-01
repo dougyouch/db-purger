@@ -308,7 +308,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together.
 ## Releasing
 
 1. Bump `s.version` in `db-purger.gemspec` and merge to `master`.
-2. Tag and push: `git tag v0.6.0 && git push origin v0.6.0`
+2. Tag and push: `git tag v0.7.0 && git push origin v0.7.0`
 
 `.github/workflows/release.yml` re-runs CI, checks the tag matches the gemspec version, publishes to RubyGems
 via trusted publishing (no API key), and creates a GitHub release with the `.gem` attached.
