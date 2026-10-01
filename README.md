@@ -252,7 +252,7 @@ bundle exec rubocop
 script/console
 ```
 
-CI (`.github/workflows/ci.yml`) runs RuboCop and the specs on Ruby 3.2–4.0 for every push and pull request.
+CI (`.github/workflows/ci.yml`) runs RuboCop and the specs on Ruby 4.0 for every push and pull request.
 The HTML coverage report is attached to each run as the `coverage` artifact, and pushes to `master` refresh
 the coverage badge on the `badges` branch.
 
