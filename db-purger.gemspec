@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = 'db-purger'
-  s.version     = '0.7.0'
+  s.version     = '0.8.0'
   s.licenses    = ['MIT']
   s.summary     = 'Purge all data tied to a top-level id across related tables, in batches'
   s.description = 'DB Purger deletes (or soft-deletes) every row related to a single top-level record ' \
