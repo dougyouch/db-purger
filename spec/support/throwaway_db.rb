@@ -14,7 +14,7 @@ module ThrowawayDB
       db.close
     end
 
-    database = DynamicActiveModel::Database.new(base_module, adapter: 'sqlite3', database: db_file)
+    database = DynamicActiveModel::Database.new(base_module, { adapter: 'sqlite3', database: db_file })
     database.create_models!
     DynamicActiveModel::Associations.new(database).build!
     database

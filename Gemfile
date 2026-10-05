@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 gem 'dynamic-active-model'
-gem 'inheritance-helper'
 
 group :development do
   gem 'rubocop'
