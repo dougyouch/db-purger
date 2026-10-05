@@ -301,7 +301,7 @@ describe 'purge safety' do
         db.close
       end
       FkTestDB = Module.new unless defined?(FkTestDB)
-      @fk_database = DynamicActiveModel::Database.new(FkTestDB, adapter: 'sqlite3', database: db_file)
+      @fk_database = DynamicActiveModel::Database.new(FkTestDB, { adapter: 'sqlite3', database: db_file })
       @fk_database.create_models!
     end
 
