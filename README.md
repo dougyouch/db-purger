@@ -37,7 +37,7 @@ db-purger lets you describe those relationships once, in a plan file, and then:
 gem 'db-purger'
 ```
 
-Requires Ruby >= 3.2 and ActiveRecord >= 7.0. Models are supplied by
+Requires Ruby >= 3.3 and ActiveRecord >= 7.0. Models are supplied by
 [dynamic-active-model](https://github.com/dougyouch/dynamic-active-model), which builds ActiveRecord classes
 directly from the database schema.
 

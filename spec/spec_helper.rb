@@ -8,6 +8,8 @@ require 'simplecov'
 
 SimpleCov.start do
   enable_coverage :branch
+  # fail CI if any line or branch goes uncovered; skipped locally so single spec files can run
+  minimum_coverage line: 100, branch: 100 if ENV['CI']
 
   cover 'lib/**/*.rb'
 end

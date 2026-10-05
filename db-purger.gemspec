@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.files       = Dir.glob('lib/**/*.rb') + %w[README.md ARCHITECTURE.md LICENSE.txt]
   s.require_paths = ['lib']
 
-  s.required_ruby_version = '>= 3.2'
+  s.required_ruby_version = '>= 3.3'
 
   s.metadata = {
     'source_code_uri' => s.homepage,
